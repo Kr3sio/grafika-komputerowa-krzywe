@@ -5,6 +5,7 @@ import views.ImagePanel;
 import views.TransformationPanel;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
@@ -27,8 +28,9 @@ public class TransformationController {
         imagePanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                model.addPoint(e.getX(), e.getY());
-                transformationPanel.addPointToList(String.format("(%.0f, %.0f)", (double) e.getX(), (double) e.getY()));
+                Point p = imagePanel.panelToCentered(e.getX(),e.getY());
+                model.addPoint(p.getX(), p.getY());
+                transformationPanel.addPointToList(String.format("(%.0f, %.0f)", p.getX(), p.getY()));
                 updateMatrixAndList();
             }
         });
@@ -42,7 +44,7 @@ public class TransformationController {
                 double angle = Double.parseDouble(transformationPanel.getRotateValue());
                 AffineTransform at = AffineTransform.getRotateInstance(Math.toRadians(angle));
                 model.transformPoint(index,at);
-                updateMatrixAndList(at);
+                updateMatrixAndList();
             }catch (NumberFormatException ex){
                 showError("Nieprawidłowy kąt obrotu.");
             }
@@ -58,7 +60,7 @@ public class TransformationController {
                 double sy = Double.parseDouble(transformationPanel.getScaleYValue());
                 AffineTransform at = AffineTransform.getScaleInstance(sx,sy);
                 model.transformPoint(selected,at);
-                updateMatrixAndList(at);
+                updateMatrixAndList();
             }catch (NumberFormatException ex){
                 showError("Nieprawidłowe wartości skalowania.");
             }
@@ -74,23 +76,20 @@ public class TransformationController {
                 double dy = Double.parseDouble(transformationPanel.getTranslateYValue());
                 AffineTransform at = AffineTransform.getTranslateInstance(dx,dy);
                 model.transformPoint(index,at);
-                updateMatrixAndList(at);
+                updateMatrixAndList();
             }catch (NumberFormatException ex){
                 showError("Nieprawidłowa wartość przesunięcia.");
             }
         });
     }
 
-    private void updateMatrixAndList() {
-        updateMatrixAndList(new AffineTransform());
-    }
 
-    private void updateMatrixAndList(AffineTransform lastTransform) {
+    private void updateMatrixAndList() {
         transformationPanel.clearPointList();
         for (var pt : model.getPoints()) {
             transformationPanel.addPointToList(String.format("(%.0f, %.0f)", pt.getX(), pt.getY()));
         }
-        transformationPanel.updateMatrixDisplay(model.getMatrixString(lastTransform));
+        transformationPanel.updateMatrixDisplay(model.getMatrixString());
         imagePanel.setDisplayedPoints(model.getPoints());
     }
 

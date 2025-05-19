@@ -9,9 +9,11 @@ public class TransformationModel {
 
     private final List<Point2D.Double> points;
 
+    private final AffineTransform currentTransform;
 
     public TransformationModel(){
         this.points = new ArrayList<>();
+        this.currentTransform = new AffineTransform();
 
     }
 
@@ -24,15 +26,15 @@ public class TransformationModel {
 
     public void clearPoints(){
         points.clear();
-
+        currentTransform.setToIdentity();
     }
 
 
 
 
-    public String getMatrixString(AffineTransform transform){
+    public String getMatrixString(){
         double[] matrix = new double[6];
-        transform.getMatrix(matrix);
+        currentTransform.getMatrix(matrix);
 
         return String.format(
                 "[ %.2f %.2f 0.00 ]\n[ %.2f %.2f 0.00 ]\n[ %.2f %.2f 1.00 ]",
@@ -49,5 +51,11 @@ public class TransformationModel {
             op.transform(src, dst);
             points.set(index, (Point2D.Double) dst);
         }
+
+        currentTransform.preConcatenate(op);
+    }
+
+    public AffineTransform getCurrentTransform(){
+        return currentTransform;
     }
 }

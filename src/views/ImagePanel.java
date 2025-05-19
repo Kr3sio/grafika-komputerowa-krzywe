@@ -52,12 +52,19 @@ public class ImagePanel extends JPanel {
             // Rysowanie obrazu na panelu
             g.drawImage( model.getImage(), x, y, this);
         }
+        g.setColor(Color.gray);
+        int cx = getWidth()/2;
+        int cy = getHeight()/2;
+        g.drawLine(0,cy,getWidth(),cy);
+        g.drawLine(cx,0,cx,getHeight());
 
         if (displayPoints != null) {
             g.setColor(Color.BLACK);
-            for (Point2D.Double p : displayPoints) {
+            for (Point2D.Double pt : displayPoints) {
+                Point p = centeredToPanel(pt.x,pt.y);
                 int r = 5; //promień
-                g.fillOval((int)p.x -r,(int)p.y-r,r*2,r*2);
+                g.setColor(Color.BLACK);
+                g.fillOval((p.x -r),(p.y-r),r*2,r*2);
             }
         }
     }
@@ -65,6 +72,18 @@ public class ImagePanel extends JPanel {
     public void setDisplayedPoints(List<Point2D.Double> points) {
         this.displayPoints = points;
         repaint();
+    }
+
+    public Point panelToCentered(int x,int y){
+        int cx = getWidth()/2;
+        int cy = getHeight()/2;
+        return new Point(x - cx, cy - y);
+    }
+
+    public Point centeredToPanel(double x, double y){
+        int cx = getWidth()/2;
+        int cy = getHeight()/2;
+        return new Point((int)(x+cx),(int)(cy-y));
     }
 
 }
