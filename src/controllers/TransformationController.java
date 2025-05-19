@@ -9,6 +9,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TransformationController {
 
@@ -36,14 +38,10 @@ public class TransformationController {
         });
         transformationPanel.getRotateButton().addActionListener(e -> {
             try {
-                int index = transformationPanel.getSelectedPointIndex();
-                if(index == -1) {
-                    showError("Wybierz punkt z listy.");
-                    return;
-                }
+                List<Integer> indices = getSelectedIndices();
                 double angle = Double.parseDouble(transformationPanel.getRotateValue());
                 AffineTransform at = AffineTransform.getRotateInstance(Math.toRadians(angle));
-                model.transformPoint(index,at);
+                model.transformPoints(indices, at);
                 updateMatrixAndList();
             }catch (NumberFormatException ex){
                 showError("Nieprawidłowy kąt obrotu.");
@@ -51,15 +49,11 @@ public class TransformationController {
         });
         transformationPanel.getScaleButton().addActionListener(e -> {
             try{
-                int selected = transformationPanel.getSelectedPointIndex();
-                if(selected == -1){
-                    showError("Wybierz punkt z listy");
-                    return;
-                }
+                List<Integer> indices = getSelectedIndices();
                 double sx = Double.parseDouble(transformationPanel.getScaleXValue());
                 double sy = Double.parseDouble(transformationPanel.getScaleYValue());
-                AffineTransform at = AffineTransform.getScaleInstance(sx,sy);
-                model.transformPoint(selected,at);
+                AffineTransform at = AffineTransform.getScaleInstance(sx, sy);
+                model.transformPoints(indices, at);
                 updateMatrixAndList();
             }catch (NumberFormatException ex){
                 showError("Nieprawidłowe wartości skalowania.");
@@ -67,15 +61,11 @@ public class TransformationController {
         });
         transformationPanel.getTranslateButton().addActionListener(e -> {
             try {
-                int index = transformationPanel.getSelectedPointIndex();
-                if(index == -1) {
-                    showError("Wybierz punkt z listy");
-                    return;
-                }
+                List<Integer> indices = getSelectedIndices();
                 double dx = Double.parseDouble(transformationPanel.getTranslateXValue());
                 double dy = Double.parseDouble(transformationPanel.getTranslateYValue());
-                AffineTransform at = AffineTransform.getTranslateInstance(dx,dy);
-                model.transformPoint(index,at);
+                AffineTransform at = AffineTransform.getTranslateInstance(dx, dy);
+                model.transformPoints(indices, at);
                 updateMatrixAndList();
             }catch (NumberFormatException ex){
                 showError("Nieprawidłowa wartość przesunięcia.");
@@ -83,6 +73,16 @@ public class TransformationController {
         });
     }
 
+    private List<Integer> getSelectedIndices() {
+        int[] indices = transformationPanel.getSelectedPointIndices();
+        if (indices.length == 0) {
+            showError("Wybierz przynajmniej jeden punkt z listy.");
+            throw new IllegalStateException("Brak zaznaczonych punktów.");
+        }
+        List<Integer> list = new ArrayList<>();
+        for (int i : indices) list.add(i);
+        return list;
+    }
 
     private void updateMatrixAndList() {
         transformationPanel.clearPointList();

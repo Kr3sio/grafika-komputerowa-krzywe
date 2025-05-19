@@ -55,6 +55,21 @@ public class TransformationModel {
         currentTransform.preConcatenate(op);
     }
 
+    public void transformPoints(List<Integer> indices, AffineTransform elementTransform) {
+        for (int index : indices) {
+            if (index >= 0 && index < points.size()) {
+                Point2D src = points.get(index);
+                Point2D dst = new Point2D.Double();
+                elementTransform.transform(src, dst);
+                points.set(index, (Point2D.Double) dst);
+            }
+        }
+
+        // Aktualizacja macierzy przekształceń
+        currentTransform.preConcatenate(elementTransform);
+    }
+
+
     public AffineTransform getCurrentTransform(){
         return currentTransform;
     }

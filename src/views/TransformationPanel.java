@@ -8,6 +8,9 @@ public class TransformationPanel extends JPanel {
     private final DefaultListModel<String> pointListModel;
     private final JList<String> pointList;
 
+
+
+
     private final JTextField rotateField = new JTextField("90",8);
     private final JTextField scaleXField = new JTextField("1.5",8);
     private final JTextField scaleYField = new JTextField("1.5",8);
@@ -18,6 +21,8 @@ public class TransformationPanel extends JPanel {
     private final JButton scaleButton;
     private final JButton translateButton;
 
+
+
     private final JTextArea matrixDisplay;
     public TransformationPanel() {
         setLayout(new BorderLayout());
@@ -25,6 +30,7 @@ public class TransformationPanel extends JPanel {
 
         pointListModel = new DefaultListModel<>();
         pointList = new JList<>(pointListModel);
+        pointList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         JScrollPane listScroll = new JScrollPane(pointList);
         listScroll.setBorder(BorderFactory.createTitledBorder("Punkty wiodące"));
 
@@ -32,7 +38,8 @@ public class TransformationPanel extends JPanel {
         JPanel operationPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(4,2,4,2);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
         operationPanel.setBorder(BorderFactory.createTitledBorder("Operacje"));
 
 
@@ -85,10 +92,15 @@ public class TransformationPanel extends JPanel {
 
         add(listScroll, BorderLayout.WEST);
         add(rightSide, BorderLayout.CENTER);
+
     }
-    public int getSelectedPointIndex() {
-        return pointList.getSelectedIndex();
+
+    public int[] getSelectedPointIndices() {
+        return pointList.getSelectedIndices();
     }
+
+
+
 
 
     public JButton getRotateButton() {return  rotateButton;}
