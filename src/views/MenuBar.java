@@ -24,6 +24,8 @@ public class MenuBar extends JMenuBar {
 
     private final JRadioButtonMenuItem transformAllPointsItems;
 
+    private final JCheckBoxMenuItem showBezierCurveMenuItem;
+
 
 
 
@@ -46,6 +48,7 @@ public class MenuBar extends JMenuBar {
         showPolylineMenuItem = new JCheckBoxMenuItem("Pokaż linię łamaną");
         transformSelectedOnlyItem = new JRadioButtonMenuItem("Transformuj zaznaczone",true);
         transformAllPointsItems = new JRadioButtonMenuItem("Transformuj wszystkie");
+        showBezierCurveMenuItem = new JCheckBoxMenuItem("Pokaż krzywą Beziera");
         ButtonGroup transformButtonGroup = new ButtonGroup();
         transformButtonGroup.add(transformSelectedOnlyItem);
         transformButtonGroup.add(transformAllPointsItems);
@@ -64,6 +67,7 @@ public class MenuBar extends JMenuBar {
         lineMenu.addSeparator();
         lineMenu.add(transformSelectedOnlyItem);
         lineMenu.add(transformAllPointsItems);
+        lineMenu.add(showBezierCurveMenuItem);
 
 
         // Dodawanie wszystkich menu do paska menu
@@ -91,6 +95,7 @@ public class MenuBar extends JMenuBar {
 
     public JCheckBoxMenuItem getShowPolylineMenuItem() {return showPolylineMenuItem;}
     public boolean isTransformAllEnabled() {return transformAllPointsItems.isSelected();}
+    public JCheckBoxMenuItem getShowBezierCurveMenuItem(){return showBezierCurveMenuItem;}
 
 
 

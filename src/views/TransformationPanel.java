@@ -20,6 +20,7 @@ public class TransformationPanel extends JPanel {
     private final JButton rotateButton;
     private final JButton scaleButton;
     private final JButton translateButton;
+    private final JTextField bezierStepField;
 
 
 
@@ -43,6 +44,7 @@ public class TransformationPanel extends JPanel {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
         operationPanel.setBorder(BorderFactory.createTitledBorder("Operacje"));
+
 
 
         rotateButton = new JButton("Obróć");
@@ -90,12 +92,20 @@ public class TransformationPanel extends JPanel {
         JScrollPane matrixScroll = new JScrollPane(matrixDisplay);
         matrixScroll.setBorder(BorderFactory.createTitledBorder("Macierz przekształceń"));
 
+        JPanel bezierPanel = new JPanel(new BorderLayout());
+        bezierPanel.setBorder(BorderFactory.createTitledBorder("Krzywa Beziera"));
+        bezierStepField = new JTextField("0.01",5);
+        bezierPanel.add(new JLabel("Dokładność:"));
+        bezierPanel.add(bezierStepField);
+
         JPanel rightSide = new JPanel(new BorderLayout());
-        rightSide.add(operationPanel, BorderLayout.CENTER);
+        add(operationPanel, BorderLayout.CENTER);
         rightSide.add(matrixScroll, BorderLayout.EAST);
+        rightSide.add(bezierPanel,BorderLayout.SOUTH);
+
 
         add(listScroll, BorderLayout.WEST);
-        add(rightSide, BorderLayout.CENTER);
+        add(rightSide, BorderLayout.EAST);
 
 
 
@@ -120,5 +130,13 @@ public class TransformationPanel extends JPanel {
     public void updateMatrixDisplay(String matrixText){matrixDisplay.setText(matrixText);}
     public void addPointToList(String point){pointListModel.addElement(point);}
     public void clearPointList(){pointListModel.clear();}
+    public double getBezierStep() {
+        try {
+            return Double.parseDouble(bezierStepField.getText());
+        } catch (NumberFormatException e) {
+            return 0.01; // wartość domyślna przy błędzie
+        }
+    }
+
 
 }

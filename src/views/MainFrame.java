@@ -4,6 +4,8 @@ import controllers.FileController;
 import controllers.ImageController;
 import controllers.TransformationController;
 import models.TransformationModel;
+import  views.TransformationPanel;
+
 
 
 import javax.swing.*;
@@ -30,6 +32,8 @@ public class MainFrame extends JFrame {
     private final ImageController imageController;
     private final FileController fileController;
 
+    private final TransformationModel transformationModel;
+    private final TransformationPanel transformationPanel;
 
 
     public MainFrame() {
@@ -41,8 +45,8 @@ public class MainFrame extends JFrame {
         // Inicjalizacja komponentów
         Panel = new ImagePanel("Obraz wczytany");
         menuBar = new MenuBar();
-
-        TransformationModel transformationModel = new TransformationModel();
+        transformationPanel = new TransformationPanel();
+        transformationModel = new TransformationModel();
         // Inicjalizacja kontrolerów
         imageController = new ImageController(this,transformationModel);
         fileController = new FileController(this);
@@ -54,7 +58,7 @@ public class MainFrame extends JFrame {
         add(contentPanel, BorderLayout.CENTER);
 
         // Panel tranformacji
-        TransformationPanel transformationPanel = new TransformationPanel();
+
         TransformationController transformationController = new TransformationController(transformationPanel,Panel,transformationModel,menuBar);
         add(transformationPanel, BorderLayout.SOUTH);
 
@@ -112,6 +116,7 @@ public class MainFrame extends JFrame {
         menuBar.getExitMenuItem().addActionListener(_ -> System.exit(0));
         menuBar.getClearLeftPanelMenuItem().addActionListener(_ -> imageController.clearLeftPanel());
         menuBar.getShowPolylineMenuItem().addActionListener(_->updatePolylineVisibility());
+        menuBar.getShowBezierCurveMenuItem().addActionListener(_->updateCurveVisibility());
 
 
     }
@@ -150,6 +155,12 @@ public class MainFrame extends JFrame {
 
         boolean showLine = menuBar.getShowPolylineMenuItem().isSelected();
         Panel.setPolyline(transformed, showLine);
+    }
+
+    private void updateCurveVisibility() {
+        boolean showBezier = menuBar.getShowBezierCurveMenuItem().isSelected();
+        double step = transformationPanel.getBezierStep();
+        Panel.setBezierCurve(transformationModel.calculateBezierPoints(step), showBezier);
     }
 
 

@@ -21,6 +21,10 @@ public class ImagePanel extends JPanel {
 
     private List<Point2D.Double> displayPoints = null;
 
+    private boolean drawBezier = false;
+
+    private List<Point2D.Double> bezierPoints = null;
+
     public ImagePanel(String title) {
         setBorder(BorderFactory.createTitledBorder(title)); // Ustawienie obramowania z tytułem
         setBackground(Color.LIGHT_GRAY); // Ustawienie koloru tła panelu
@@ -82,6 +86,14 @@ public class ImagePanel extends JPanel {
                 g.drawLine(p1.x,p1.y,p2.x,p2.y);
             }
         }
+        if (drawBezier && bezierPoints != null && bezierPoints.size() > 1) {
+            g.setColor(Color.GREEN);
+            for (int i = 0; i < bezierPoints.size() - 1; i++) {
+                Point p1 = centeredToPanel(bezierPoints.get(i).x, bezierPoints.get(i).y);
+                Point p2 = centeredToPanel(bezierPoints.get(i + 1).x, bezierPoints.get(i + 1).y);
+                g.drawLine(p1.x, p1.y, p2.x, p2.y);
+            }
+        }
         System.out.println("[DEBUG] repaint triggered");
 
     }
@@ -107,6 +119,12 @@ public class ImagePanel extends JPanel {
         System.out.println("[DEBUG] setPolyline: " + (transformedPoints != null ? transformedPoints.size() : "null"));
         this.polylinePoints = transformedPoints;
         this.drawPolyline = enable;
+        repaint();
+    }
+
+    public void setBezierCurve(List<Point2D.Double> points, boolean enable){
+        this.bezierPoints=points;
+        this.drawBezier=enable;
         repaint();
     }
 
