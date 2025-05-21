@@ -3,6 +3,8 @@ package views;
 import controllers.FileController;
 import controllers.ImageController;
 import controllers.TransformationController;
+import models.TransformationModel;
+
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -28,6 +30,8 @@ public class MainFrame extends JFrame {
     private final ImageController imageController;
     private final FileController fileController;
 
+
+
     public MainFrame() {
         super("Grafika komputerowa");
         setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -38,9 +42,11 @@ public class MainFrame extends JFrame {
         Panel = new ImagePanel("Obraz wczytany");
         menuBar = new MenuBar();
 
+        TransformationModel transformationModel = new TransformationModel();
         // Inicjalizacja kontrolerów
-        imageController = new ImageController(this);
+        imageController = new ImageController(this,transformationModel);
         fileController = new FileController(this);
+
 
         // Utworzenie kontenera do organizacji komponentów interfejsu użytkownika, ustawiamy siatkę 1x2 dla 2 paneli z obrazami
         JPanel contentPanel = new JPanel(new GridLayout(1, 2, 5, 5));
@@ -49,7 +55,7 @@ public class MainFrame extends JFrame {
 
         // Panel tranformacji
         TransformationPanel transformationPanel = new TransformationPanel();
-        TransformationController transformationController = new TransformationController(transformationPanel,Panel);
+        TransformationController transformationController = new TransformationController(transformationPanel,Panel,transformationModel,menuBar);
         add(transformationPanel, BorderLayout.SOUTH);
 
         // Pasek menu
@@ -105,6 +111,7 @@ public class MainFrame extends JFrame {
         menuBar.getSaveFileMenuItem().addActionListener(_ -> showSaveFileDialog());
         menuBar.getExitMenuItem().addActionListener(_ -> System.exit(0));
         menuBar.getClearLeftPanelMenuItem().addActionListener(_ -> imageController.clearLeftPanel());
+        menuBar.getShowPolylineMenuItem().addActionListener(_->updatePolylineVisibility());
 
 
     }
@@ -129,6 +136,23 @@ public class MainFrame extends JFrame {
             imageController.loadImage(file);
         }
     }
+
+    private void updatePolylineVisibility() {
+        System.out.println("[DEBUG] updatePolylineVisibility() called");
+
+        if (imageController.getModel() == null) {
+            System.out.println("[DEBUG] model is null!");
+            return;
+        }
+
+        var transformed = imageController.getModel().getTransformedPoints();
+        System.out.println("[DEBUG] transformed points: " + transformed.size());
+
+        boolean showLine = menuBar.getShowPolylineMenuItem().isSelected();
+        Panel.setPolyline(transformed, showLine);
+    }
+
+
 
     /**
      * Metoda otwiera okno dialogowe zapisu pliku graficznego.

@@ -1,6 +1,7 @@
 package controllers;
 
 import models.ImageModel;
+import models.TransformationModel;
 import views.ImagePanel;
 import views.MainFrame;
 
@@ -19,13 +20,14 @@ public class ImageController {
 
     private final ImagePanel leftPanel;
 
+    private TransformationModel model;
 
-
-    public ImageController(MainFrame mainFrame) {
+    public ImageController(MainFrame mainFrame, TransformationModel model) {
         this.mainFrame = mainFrame;
         this.leftPanel = mainFrame.getPanel();
-
+        this.model = model;
     }
+
 
     /**
      * Wczytuje obraz z pliku i ustawia go w lewym panelu.
@@ -35,16 +37,20 @@ public class ImageController {
     public void loadImage(File file) {
         try {
             var image = ImageIO.read(file);
-
-            var model = new ImageModel(image);
-            leftPanel.setModel(model);
+            var imageModel = new ImageModel(image);
+            leftPanel.setModel(imageModel);
             leftPanel.repaint();
 
-            mainFrame.adjustWindowSize(); // Dopasowanie rozmiaru okna po załadowaniu obrazu
+            if (model == null) {
+                model = new TransformationModel(); // do punktów i macierzy
+            }
+
+            mainFrame.adjustWindowSize();
         } catch (IOException e) {
             JOptionPane.showMessageDialog(mainFrame, "Nieznany błąd!", "Błąd", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
     /**
      * Usuwa obraz z lewego panelu.
@@ -52,6 +58,11 @@ public class ImageController {
     public void clearLeftPanel() {
         leftPanel.setModel(null);
         leftPanel.repaint();
+    }
+
+
+    public TransformationModel getModel(){
+        return model;
     }
 
 

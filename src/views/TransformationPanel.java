@@ -23,6 +23,8 @@ public class TransformationPanel extends JPanel {
 
 
 
+
+
     private final JTextArea matrixDisplay;
     public TransformationPanel() {
         setLayout(new BorderLayout());
@@ -46,6 +48,8 @@ public class TransformationPanel extends JPanel {
         rotateButton = new JButton("Obróć");
         scaleButton = new JButton("Skaluj");
         translateButton = new JButton("Przesuń");
+
+
 
         // Kąt obrotu
         gbc.gridx = 0; gbc.gridy = 0;
@@ -92,6 +96,8 @@ public class TransformationPanel extends JPanel {
 
         add(listScroll, BorderLayout.WEST);
         add(rightSide, BorderLayout.CENTER);
+
+
 
     }
 

@@ -69,6 +69,10 @@ public class TransformationModel {
         currentTransform.preConcatenate(elementTransform);
     }
 
+    public List<Point2D.Double> getTransformedPoints() {
+        return new ArrayList<>(points);
+    }
+
 
     public AffineTransform getCurrentTransform(){
         return currentTransform;

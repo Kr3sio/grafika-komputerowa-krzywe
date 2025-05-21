@@ -3,12 +3,14 @@ package controllers;
 import models.TransformationModel;
 import views.ImagePanel;
 import views.TransformationPanel;
+import views.MenuBar;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,14 +19,16 @@ public class TransformationController {
     private final TransformationModel model;
     private final TransformationPanel transformationPanel;
     private final ImagePanel imagePanel;
+    private final MenuBar menuBar;
 
-    public TransformationController(TransformationPanel transformationPanel, ImagePanel imagePanel) {
-        this.model = new TransformationModel();
+    public TransformationController(TransformationPanel transformationPanel, ImagePanel imagePanel, TransformationModel model,MenuBar menuBar) {
+        this.model = model;
+        this.menuBar = menuBar;
         this.transformationPanel = transformationPanel;
         this.imagePanel = imagePanel;
-
         setupListeners();
     }
+
 
     private void setupListeners() {
         imagePanel.addMouseListener(new MouseAdapter() {
@@ -34,6 +38,11 @@ public class TransformationController {
                 model.addPoint(p.getX(), p.getY());
                 transformationPanel.addPointToList(String.format("(%.0f, %.0f)", p.getX(), p.getY()));
                 updateMatrixAndList();
+
+                if (menuBar.getShowPolylineMenuItem().isSelected()) {
+                    List<Point2D.Double> transformed = model.getTransformedPoints();
+                    imagePanel.setPolyline(transformed, true);
+                }
             }
         });
         transformationPanel.getRotateButton().addActionListener(e -> {
@@ -74,15 +83,25 @@ public class TransformationController {
     }
 
     private List<Integer> getSelectedIndices() {
-        int[] indices = transformationPanel.getSelectedPointIndices();
-        if (indices.length == 0) {
-            showError("Wybierz przynajmniej jeden punkt z listy.");
-            throw new IllegalStateException("Brak zaznaczonych punktów.");
-        }
         List<Integer> list = new ArrayList<>();
-        for (int i : indices) list.add(i);
+
+        if (menuBar.isTransformAllEnabled()) {
+            // Transformujemy wszystkie punkty
+            for (int i = 0; i < model.getPoints().size(); i++) {
+                list.add(i);
+            }
+        } else {
+            int[] indices = transformationPanel.getSelectedPointIndices();
+            if (indices.length == 0) {
+                showError("Wybierz przynajmniej jeden punkt z listy.");
+                throw new IllegalStateException("Brak zaznaczonych punktów.");
+            }
+            for (int i : indices) list.add(i);
+        }
+
         return list;
     }
+
 
     private void updateMatrixAndList() {
         transformationPanel.clearPointList();
@@ -91,9 +110,16 @@ public class TransformationController {
         }
         transformationPanel.updateMatrixDisplay(model.getMatrixString());
         imagePanel.setDisplayedPoints(model.getPoints());
+
+        // 🔄 Dodaj to: automatyczne odświeżenie łamanej
+        if (menuBar.getShowPolylineMenuItem().isSelected()) {
+            List<Point2D.Double> transformed = model.getTransformedPoints();
+            imagePanel.setPolyline(transformed, true);
+        }
     }
 
     private void showError(String message) {
-        javax.swing.JOptionPane.showMessageDialog(transformationPanel, message,"Błąd",javax.swing.JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(transformationPanel, message, "Błąd", JOptionPane.ERROR_MESSAGE);
     }
+
 }

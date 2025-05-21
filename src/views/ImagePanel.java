@@ -15,6 +15,10 @@ public class ImagePanel extends JPanel {
 
     private ImageModel model;
 
+    private boolean drawPolyline = false;
+
+    private List<Point2D.Double> polylinePoints = null;
+
     private List<Point2D.Double> displayPoints = null;
 
     public ImagePanel(String title) {
@@ -35,6 +39,8 @@ public class ImagePanel extends JPanel {
     public ImageModel getModel() {
         return model;
     }
+
+
 
     /**
      * Przesłonięta metoda rysowania komponentu. Wyświetla obraz na środku panelu.
@@ -67,6 +73,17 @@ public class ImagePanel extends JPanel {
                 g.fillOval((p.x -r),(p.y-r),r*2,r*2);
             }
         }
+
+        if(drawPolyline && polylinePoints != null && polylinePoints.size() > 1) {
+            g.setColor(Color.RED);
+            for(int i = 0 ; i < polylinePoints.size()-1 ; i++) {
+                Point p1 = centeredToPanel(polylinePoints.get(i).x, polylinePoints.get(i).y);
+                Point p2 = centeredToPanel(polylinePoints.get(i+1).x, polylinePoints.get(i+1).y);
+                g.drawLine(p1.x,p1.y,p2.x,p2.y);
+            }
+        }
+        System.out.println("[DEBUG] repaint triggered");
+
     }
 
     public void setDisplayedPoints(List<Point2D.Double> points) {
@@ -85,5 +102,13 @@ public class ImagePanel extends JPanel {
         int cy = getHeight()/2;
         return new Point((int)(x+cx),(int)(cy-y));
     }
+
+    public void setPolyline(List<Point2D.Double> transformedPoints, boolean enable) {
+        System.out.println("[DEBUG] setPolyline: " + (transformedPoints != null ? transformedPoints.size() : "null"));
+        this.polylinePoints = transformedPoints;
+        this.drawPolyline = enable;
+        repaint();
+    }
+
 
 }
