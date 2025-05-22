@@ -13,7 +13,13 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
+import java.awt.geom.PathIterator;
+import java.awt.geom.Point2D;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainFrame extends JFrame {
 
@@ -118,7 +124,7 @@ public class MainFrame extends JFrame {
         menuBar.getShowPolylineMenuItem().addActionListener(_->updatePolylineVisibility());
         menuBar.getShowBezierCurveMenuItem().addActionListener(_->updateCurveVisibility());
         menuBar.getClearCurveMenuItem().addActionListener(_->clearCurve());
-
+        menuBar.getGenerateTextCurveMenuItem().addActionListener(_->showTextInputDialog());
 
     }
 
@@ -173,6 +179,164 @@ public class MainFrame extends JFrame {
 
         transformationPanel.updateMatrixDisplay(transformationModel.getMatrixString());
     }
+
+    private void showTextInputDialog() {
+        JDialog dialog = new JDialog(this, "Wygeneruj krzywą z tekstu", true);
+        dialog.setLayout(new BoxLayout(dialog.getContentPane(), BoxLayout.Y_AXIS));
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        // Panel tekstowy
+        JPanel textPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        textPanel.add(new JLabel("Tekst:"));
+        JTextField textField = new JTextField(15);
+        textPanel.add(textField);
+
+        // Panel dokładności
+        JPanel stepPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        stepPanel.add(new JLabel("Dokładność (np. 0.01):"));
+        JTextField stepField = new JTextField("0.01", 6);
+        stepPanel.add(stepField);
+
+        // Panel checkboxa
+        JPanel checkPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JCheckBox showPointsCheckBox = new JCheckBox("Wyświetl punkty kontrolne", true); // domyślnie zaznaczone
+        checkPanel.add(showPointsCheckBox);
+
+        // Panel przycisku
+        JPanel buttonPanel = new JPanel();
+        JButton generateButton = new JButton("Generuj");
+        buttonPanel.add(generateButton);
+
+        // Dodanie paneli
+        dialog.add(textPanel);
+        dialog.add(stepPanel);
+        dialog.add(checkPanel);
+        dialog.add(buttonPanel);
+
+        generateButton.addActionListener(e -> {
+            String text = textField.getText();
+            double step;
+            boolean showPoints = showPointsCheckBox.isSelected();
+
+            try {
+                step = Double.parseDouble(stepField.getText());
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Nieprawidłowa dokładność.", "Błąd", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            generateBezierFromText(text, step, showPoints);
+            dialog.dispose();
+        });
+
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    private void generateBezierFromText(String text, double step, boolean showPoints) {
+        transformationModel.clearPoints();
+        transformationPanel.clearPointList();
+
+        Font font = new Font("Arial", Font.PLAIN, 100);
+        FontRenderContext frc = new FontRenderContext(null, true, true);
+        GlyphVector gv = font.createGlyphVector(frc, text);
+
+        Shape shape = gv.getOutline();
+        PathIterator pi = shape.getPathIterator(null, 1.0);
+
+        double[] coords = new double[6];
+        Point2D.Double currentPoint = new Point2D.Double();
+        List<Point2D.Double> bezierCurvePoints = new ArrayList<>();
+
+        while (!pi.isDone()) {
+            int type = pi.currentSegment(coords);
+
+            switch (type) {
+                case PathIterator.SEG_MOVETO -> {
+                    currentPoint = new Point2D.Double(coords[0], -coords[1]);
+                }
+
+                case PathIterator.SEG_CUBICTO -> {
+                    Point2D.Double ctrl1 = new Point2D.Double(coords[0], -coords[1]);
+                    Point2D.Double ctrl2 = new Point2D.Double(coords[2], -coords[3]);
+                    Point2D.Double end = new Point2D.Double(coords[4], -coords[5]);
+
+                    List<Point2D.Double> controlPoints = List.of(currentPoint, ctrl1, ctrl2, end);
+                    bezierCurvePoints.addAll(sampleBezier(controlPoints, step));
+
+                    currentPoint = end;
+                }
+
+                case PathIterator.SEG_LINETO -> {
+                    //  Konwersja linii na „fałszywą” krzywą Béziera
+                    Point2D.Double end = new Point2D.Double(coords[0], -coords[1]);
+
+                    List<Point2D.Double> pseudoCurve = List.of(
+                            currentPoint,
+                            currentPoint,
+                            end,
+                            end
+                    );
+                    bezierCurvePoints.addAll(sampleBezier(pseudoCurve, step));
+                    currentPoint = end;
+                }
+            }
+            pi.next();
+        }
+
+        // Wyświetlenie punktów kontrolnych
+        if (showPoints) {
+            for (var pt : bezierCurvePoints) {
+                transformationModel.addPoint(pt.x, pt.y);
+                transformationPanel.addPointToList(String.format("(%.0f, %.0f)", pt.getX(), pt.getY()));
+            }
+            Panel.setDisplayedPoints(transformationModel.getPoints());
+        } else {
+            Panel.setDisplayedPoints(null);
+        }
+
+        transformationPanel.updateMatrixDisplay(transformationModel.getMatrixString());
+        Panel.setBezierCurve(bezierCurvePoints, true);
+    }
+
+
+    private List<Point2D.Double> sampleBezier(List<Point2D.Double> ctrlPoints, double step) {
+        List<Point2D.Double> result = new ArrayList<>();
+        for (double t = 0.0; t <= 1.0; t += step) {
+            result.add(bezierPoint(ctrlPoints, t));
+        }
+        result.add(bezierPoint(ctrlPoints, 1.0));
+        return result;
+    }
+
+
+    private Point2D.Double bezierPoint(List<Point2D.Double> ctrlPoints, double t) {
+        int n = ctrlPoints.size() - 1;
+        double x = 0;
+        double y = 0;
+
+        for (int i = 0; i <= n; i++) {
+            double binomial = binomialCoefficient(n, i);
+            double coefficient = binomial * Math.pow(1 - t, n - i) * Math.pow(t, i);
+            x += coefficient * ctrlPoints.get(i).x;
+            y += coefficient * ctrlPoints.get(i).y;
+        }
+
+        return new Point2D.Double(x, y);
+    }
+
+    private double binomialCoefficient(int n, int k) {
+        double result = 1;
+        for (int i = 1; i <= k; i++) {
+            result *= (n - (k - i));
+            result /= i;
+        }
+        return result;
+    }
+
+
+
 
 
     /**

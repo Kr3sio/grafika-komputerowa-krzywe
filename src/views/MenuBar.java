@@ -28,6 +28,8 @@ public class MenuBar extends JMenuBar {
 
     private final JMenuItem clearCurveMenuItem;
 
+    private final JMenuItem generateTextCurveMenuItem;
+
 
 
 
@@ -59,6 +61,8 @@ public class MenuBar extends JMenuBar {
         lineMenu.addSeparator();
         lineMenu.add(clearCurveMenuItem);
 
+        generateTextCurveMenuItem = new JMenuItem("Generuj krzywą z tekstu");
+        lineMenu.add(generateTextCurveMenuItem);
 
         // Dodanie elementów do menu Plik
         fileMenu.add(openFileMenuItem);
@@ -104,6 +108,7 @@ public class MenuBar extends JMenuBar {
     public boolean isTransformAllEnabled() {return transformAllPointsItems.isSelected();}
     public JCheckBoxMenuItem getShowBezierCurveMenuItem(){return showBezierCurveMenuItem;}
     public JMenuItem getClearCurveMenuItem() {return clearCurveMenuItem;}
+    public JMenuItem getGenerateTextCurveMenuItem() {return generateTextCurveMenuItem;}
 
 
 

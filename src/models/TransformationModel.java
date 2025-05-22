@@ -69,35 +69,45 @@ public class TransformationModel {
         currentTransform.preConcatenate(elementTransform);
     }
 
-    public List<Point2D.Double> calculateBezierPoints(double step){
+    public List<Point2D.Double> calculateBezierPoints(double step) {
         List<Point2D.Double> result = new ArrayList<>();
-        int n = points.size() -1;
+        int n = points.size() - 1;
 
-        if(n<1)return result;
+        if (n < 1) return result;
 
-        for(double t=0.0;t<=1.0;t+=step){
-            Point2D.Double pt = deCasteljau(points,t);
-            result.add(pt);
+        for (double t = 0.0; t <= 1.0; t += step) {
+            result.add(bezierPoint(points, t));
         }
 
-        result.add(deCasteljau(points,1.0));
+        result.add(bezierPoint(points, 1.0));
         return result;
     }
 
-    private Point2D.Double deCasteljau(List<Point2D.Double> ctrlPoints, double t){
-        List<Point2D.Double> temp = new ArrayList<>(ctrlPoints);
 
-        while(temp.size()>1){
-            List<Point2D.Double> next = new ArrayList<>();
-            for(int i = 0; i<temp.size()-1;i++){
-                double x = (1-t)*temp.get(i).x + t * temp.get(i+1).x;
-                double y = (1-t)*temp.get(i).y + t * temp.get(i+1).y;
-                next.add(new Point2D.Double(x,y));
-            }
-            temp = next;
+    private Point2D.Double bezierPoint(List<Point2D.Double> ctrlPoints, double t) {
+        int n = ctrlPoints.size() - 1;
+        double x = 0;
+        double y = 0;
+
+        for (int i = 0; i <= n; i++) {
+            double binomial = binomialCoefficient(n, i);
+            double coefficient = binomial * Math.pow(1 - t, n - i) * Math.pow(t, i);
+            x += coefficient * ctrlPoints.get(i).x;
+            y += coefficient * ctrlPoints.get(i).y;
         }
-        return temp.get(0);
+
+        return new Point2D.Double(x, y);
     }
+
+    private double binomialCoefficient(int n, int k) {
+        double result = 1;
+        for (int i = 1; i <= k; i++) {
+            result *= (n - (k - i));
+            result /= i;
+        }
+        return result;
+    }
+
 
     public List<Point2D.Double> getTransformedPoints() {
         return new ArrayList<>(points);
