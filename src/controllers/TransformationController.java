@@ -116,6 +116,12 @@ public class TransformationController {
             List<Point2D.Double> transformed = model.getTransformedPoints();
             imagePanel.setPolyline(transformed, true);
         }
+
+        if(menuBar.getShowBezierCurveMenuItem().isSelected()){
+            double step = transformationPanel.getBezierStep();
+            List<Point2D.Double> bezier = model.calculateBezierPoints(step);
+            imagePanel.setBezierCurve(bezier, true);
+        }
     }
 
     private void showError(String message) {

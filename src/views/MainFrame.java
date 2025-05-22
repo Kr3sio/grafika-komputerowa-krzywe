@@ -117,6 +117,7 @@ public class MainFrame extends JFrame {
         menuBar.getClearLeftPanelMenuItem().addActionListener(_ -> imageController.clearLeftPanel());
         menuBar.getShowPolylineMenuItem().addActionListener(_->updatePolylineVisibility());
         menuBar.getShowBezierCurveMenuItem().addActionListener(_->updateCurveVisibility());
+        menuBar.getClearCurveMenuItem().addActionListener(_->clearCurve());
 
 
     }
@@ -163,6 +164,15 @@ public class MainFrame extends JFrame {
         Panel.setBezierCurve(transformationModel.calculateBezierPoints(step), showBezier);
     }
 
+    private void clearCurve() {
+        transformationModel.clearPoints();
+        transformationPanel.clearPointList();
+        Panel.setDisplayedPoints(null);
+        Panel.setPolyline(null,false);
+        Panel.setBezierCurve(null,false);
+
+        transformationPanel.updateMatrixDisplay(transformationModel.getMatrixString());
+    }
 
 
     /**

@@ -26,6 +26,8 @@ public class MenuBar extends JMenuBar {
 
     private final JCheckBoxMenuItem showBezierCurveMenuItem;
 
+    private final JMenuItem clearCurveMenuItem;
+
 
 
 
@@ -52,6 +54,11 @@ public class MenuBar extends JMenuBar {
         ButtonGroup transformButtonGroup = new ButtonGroup();
         transformButtonGroup.add(transformSelectedOnlyItem);
         transformButtonGroup.add(transformAllPointsItems);
+
+        clearCurveMenuItem = new JMenuItem("Wyczyść krzywą i punkty");
+        lineMenu.addSeparator();
+        lineMenu.add(clearCurveMenuItem);
+
 
         // Dodanie elementów do menu Plik
         fileMenu.add(openFileMenuItem);
@@ -96,6 +103,7 @@ public class MenuBar extends JMenuBar {
     public JCheckBoxMenuItem getShowPolylineMenuItem() {return showPolylineMenuItem;}
     public boolean isTransformAllEnabled() {return transformAllPointsItems.isSelected();}
     public JCheckBoxMenuItem getShowBezierCurveMenuItem(){return showBezierCurveMenuItem;}
+    public JMenuItem getClearCurveMenuItem() {return clearCurveMenuItem;}
 
 
 
