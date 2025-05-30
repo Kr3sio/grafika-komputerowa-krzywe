@@ -1,0 +1,17 @@
+# Cube 1x1x1 centered at origin
+
+v 1 1 1
+v -1 1 1
+v -1 -1 1
+v 1 -1 1
+v 1 1 -1
+v -1 1 -1
+v -1 -1 -1
+v 1 -1 -1
+
+f 0 1 2 3   # front
+f 4 5 6 7   # back
+f 0 4 7 3   # right
+f 1 5 6 2   # left
+f 0 1 5 4   # top
+f 3 2 6 7   # bottom

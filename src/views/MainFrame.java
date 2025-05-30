@@ -41,6 +41,8 @@ public class MainFrame extends JFrame {
     private final TransformationModel transformationModel;
     private final TransformationPanel transformationPanel;
 
+    private final Transformation3DPanel transformation3DPanel;
+
 
     public MainFrame() {
         super("Grafika komputerowa");
@@ -58,6 +60,9 @@ public class MainFrame extends JFrame {
         fileController = new FileController(this);
 
 
+        transformation3DPanel = new Transformation3DPanel();
+        add(transformation3DPanel, BorderLayout.SOUTH);
+
         // Utworzenie kontenera do organizacji komponentów interfejsu użytkownika, ustawiamy siatkę 1x2 dla 2 paneli z obrazami
         JPanel contentPanel = new JPanel(new GridLayout(1, 2, 5, 5));
         contentPanel.add(Panel);
@@ -66,7 +71,7 @@ public class MainFrame extends JFrame {
         // Panel tranformacji
 
         TransformationController transformationController = new TransformationController(transformationPanel,Panel,transformationModel,menuBar);
-        add(transformationPanel, BorderLayout.SOUTH);
+//        add(transformationPanel, BorderLayout.SOUTH);
 
         // Pasek menu
         setJMenuBar(menuBar); // Dodanie menu do okna

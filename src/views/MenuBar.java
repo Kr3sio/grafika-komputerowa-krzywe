@@ -30,6 +30,16 @@ public class MenuBar extends JMenuBar {
 
     private final JMenuItem generateTextCurveMenuItem;
 
+    private final JMenu view3DMenu;
+
+    private final JRadioButtonMenuItem orthoProjectionItem;
+
+    private final JRadioButtonMenuItem perspectiveProjectionItem;
+
+    private final JCheckBoxMenuItem visibleOnlyFaceItem;
+
+    private final JTextField observerDistanceField;
+
 
 
 
@@ -81,11 +91,34 @@ public class MenuBar extends JMenuBar {
         lineMenu.add(showBezierCurveMenuItem);
 
 
+        // === [3D] Zakładka Widok 3D ===
+
+        view3DMenu = new JMenu("Widok 3D");
+
+        orthoProjectionItem = new JRadioButtonMenuItem("Rzut równoległy",true);
+        perspectiveProjectionItem = new JRadioButtonMenuItem("Rzut perspektywiczny");
+        visibleOnlyFaceItem = new JCheckBoxMenuItem("Tylko widoczne ściany");
+
+        ButtonGroup projectionGrou = new ButtonGroup();
+        projectionGrou.add(orthoProjectionItem);
+        projectionGrou.add(perspectiveProjectionItem);
+
+        observerDistanceField = new JTextField("100",5);
+
+        view3DMenu.add(orthoProjectionItem);
+        view3DMenu.add(perspectiveProjectionItem);
+        view3DMenu.addSeparator();
+        view3DMenu.add(new JLabel("Odległość obserwatora (d): "));
+        view3DMenu.add(observerDistanceField);
+        view3DMenu.addSeparator();
+        view3DMenu.add(visibleOnlyFaceItem);
+
         // Dodawanie wszystkich menu do paska menu
         add(fileMenu);
         add(PanelMenu);
         add(editPanelMenu);
         add(lineMenu);
+        add(view3DMenu);
     }
 
     public JMenuItem getOpenFileMenuItem() {
@@ -109,7 +142,16 @@ public class MenuBar extends JMenuBar {
     public JCheckBoxMenuItem getShowBezierCurveMenuItem(){return showBezierCurveMenuItem;}
     public JMenuItem getClearCurveMenuItem() {return clearCurveMenuItem;}
     public JMenuItem getGenerateTextCurveMenuItem() {return generateTextCurveMenuItem;}
-
+    public boolean isOrthoProjectionSelected() { return orthoProjectionItem.isSelected(); } // [3D]
+    public boolean isPerspectiveProjectionSelected() { return perspectiveProjectionItem.isSelected(); } // [3D]
+    public boolean isVisibleOnlySelected() { return visibleOnlyFaceItem.isSelected(); } // [3D]
+    public double getObserverDistance() { // [3D]
+        try {
+            return Double.parseDouble(observerDistanceField.getText());
+        } catch (NumberFormatException e) {
+            return 100.0;
+        }
+    }
 
 
 
