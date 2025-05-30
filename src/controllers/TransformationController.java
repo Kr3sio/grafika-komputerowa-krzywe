@@ -79,7 +79,24 @@ public class TransformationController {
             }catch (NumberFormatException ex){
                 showError("Nieprawidłowa wartość przesunięcia.");
             }
+
         });
+
+        transformationPanel.getRemovePointButton().addActionListener(e -> {
+            int[] selected = transformationPanel.getSelectedPointIndices();
+            if (selected.length == 0) {
+                showError("Wybierz punkt do usunięcia.");
+                return;
+            }
+
+            // Usuwamy w odwrotnej kolejności, by nie przesuwać indeksów
+            for (int i = selected.length - 1; i >= 0; i--) {
+                model.removePoint(selected[i]);
+            }
+
+            updateMatrixAndList();
+        });
+
     }
 
     private List<Integer> getSelectedIndices() {

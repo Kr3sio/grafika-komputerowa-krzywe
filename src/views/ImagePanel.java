@@ -87,7 +87,7 @@ public class ImagePanel extends JPanel {
             }
         }
         if (drawBezier && bezierPoints != null && bezierPoints.size() > 1) {
-            g.setColor(Color.GREEN);
+            g.setColor(Color.BLACK);
             for (int i = 0; i < bezierPoints.size() - 1; i++) {
                 Point p1 = centeredToPanel(bezierPoints.get(i).x, bezierPoints.get(i).y);
                 Point p2 = centeredToPanel(bezierPoints.get(i + 1).x, bezierPoints.get(i + 1).y);

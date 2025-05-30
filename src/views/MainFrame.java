@@ -288,8 +288,10 @@ public class MainFrame extends JFrame {
         // Wyświetlenie punktów kontrolnych
         if (showPoints) {
             for (var pt : bezierCurvePoints) {
+                int id = 1;
                 transformationModel.addPoint(pt.x, pt.y);
-                transformationPanel.addPointToList(String.format("(%.0f, %.0f)", pt.getX(), pt.getY()));
+                transformationPanel.addPointToList(String.format("%.0f(%.0f, %.0f)",pt.getX(), pt.getX(), pt.getY()));
+
             }
             Panel.setDisplayedPoints(transformationModel.getPoints());
         } else {

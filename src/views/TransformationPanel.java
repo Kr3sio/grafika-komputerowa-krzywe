@@ -22,6 +22,8 @@ public class TransformationPanel extends JPanel {
     private final JButton translateButton;
     private final JTextField bezierStepField;
 
+    private final JButton removePointButton;
+
 
 
 
@@ -52,6 +54,10 @@ public class TransformationPanel extends JPanel {
         rotateButton = new JButton("Obróć");
         scaleButton = new JButton("Skaluj");
         translateButton = new JButton("Przesuń");
+
+        removePointButton = new JButton("Usuń punkt");
+
+
 
 
 
@@ -96,17 +102,22 @@ public class TransformationPanel extends JPanel {
 
         JPanel bezierPanel = new JPanel(new BorderLayout());
         bezierPanel.setBorder(BorderFactory.createTitledBorder("Krzywa Beziera"));
-        bezierStepField = new JTextField("0.01",5);
+        bezierStepField = new JTextField("0.01",10);
         bezierPanel.add(new JLabel("Dokładność:"));
         bezierPanel.add(bezierStepField);
-
         JPanel rightSide = new JPanel(new BorderLayout());
+        JPanel rightSideup = new JPanel(new BorderLayout());
+        JPanel rightSidedown = new JPanel(new BorderLayout());
         add(operationPanel, BorderLayout.CENTER);
-        rightSide.add(matrixScroll, BorderLayout.EAST);
-        rightSide.add(bezierPanel,BorderLayout.SOUTH);
+        rightSideup.add(matrixScroll);
+        rightSidedown.add(bezierPanel,BorderLayout.EAST);
+        rightSidedown.add(removePointButton,BorderLayout.WEST);
 
+        rightSide.add(rightSideup,BorderLayout.NORTH);
+        rightSide.add(rightSidedown,BorderLayout.SOUTH);
 
         add(listScroll, BorderLayout.WEST);
+
         add(rightSide, BorderLayout.EAST);
 
 
@@ -139,6 +150,11 @@ public class TransformationPanel extends JPanel {
             return 0.01; // wartość domyślna przy błędzie
         }
     }
+
+    public JButton getRemovePointButton() {
+        return removePointButton;
+    }
+
 
 
 }

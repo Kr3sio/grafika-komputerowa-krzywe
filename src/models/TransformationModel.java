@@ -108,6 +108,13 @@ public class TransformationModel {
         return result;
     }
 
+    public void removePoint(int index) {
+        if (index >= 0 && index < points.size()) {
+            points.remove(index);
+        }
+    }
+
+
 
     public List<Point2D.Double> getTransformedPoints() {
         return new ArrayList<>(points);
