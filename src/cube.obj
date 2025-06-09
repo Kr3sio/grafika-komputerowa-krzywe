@@ -1,0 +1,33 @@
+# Przykładowy sześcian
+# Wierzchołki (v x y z)
+# Standardowy sześcian o bokach długości 2, wyśrodkowany na (0,0,0)
+v -1.0 -1.0 -1.0  # 1
+v  1.0 -1.0 -1.0  # 2
+v  1.0  1.0 -1.0  # 3
+v -1.0  1.0 -1.0  # 4
+v -1.0 -1.0  1.0  # 5
+v  1.0 -1.0  1.0  # 6
+v  1.0  1.0  1.0  # 7
+v -1.0  1.0  1.0  # 8
+
+# Ściany (f v1 v2 v3 ...)
+# Indeksy wierzchołków liczone od 1
+# Kolejność wierzchołków odwrotna do ruchu wskazówek zegara (patrząc od zewnątrz)
+
+# Dolna ściana
+f 1 2 6 5
+
+# Górna ściana
+f 4 8 7 3
+
+# Przednia ściana (patrząc wzdłuż osi -Z)
+f 1 4 3 2
+
+# Tylna ściana (patrząc wzdłuż osi +Z)
+f 5 6 7 8
+
+# Lewa ściana
+f 1 5 8 4
+
+# Prawa ściana
+f 2 3 7 6

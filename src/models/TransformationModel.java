@@ -1,112 +1,92 @@
 package models;
 
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class TransformationModel {
 
-    private final List<Point2D.Double> points;
+    private final List<Point3D> points;
 
-    private final AffineTransform currentTransform;
+    private double[][] currentTransformMatrix;
 
     public TransformationModel(){
         this.points = new ArrayList<>();
-        this.currentTransform = new AffineTransform();
+        this.currentTransformMatrix = new double[][]{
+                {1, 0, 0, 0},
+                {0, 1, 0, 0},
+                {0, 0, 1, 0},
+                {0, 0, 0, 1}
+        };
 
     }
 
-    public void addPoint(double x, double y){
-        points.add(new Point2D.Double(x, y));
+    public void addPoint(double x, double y, double z){
+
+        points.add(new Point3D(x, y, z));
     }
 
-    public List<Point2D.Double> getPoints(){return points;}
+    public List<Point3D> getPoints(){return points;}
 
 
     public void clearPoints(){
         points.clear();
-        currentTransform.setToIdentity();
+        this.currentTransformMatrix = new double[][]{
+                {1, 0, 0, 0},
+                {0, 1, 0, 0},
+                {0, 0, 1, 0},
+                {0, 0, 0, 1}
+        };
     }
 
 
 
 
     public String getMatrixString(){
-        double[] matrix = new double[6];
-        currentTransform.getMatrix(matrix);
-
-        return String.format(
-                "[ %.2f %.2f 0.00 ]\n[ %.2f %.2f 0.00 ]\n[ %.2f %.2f 1.00 ]",
-                matrix[0], matrix[2],
-                matrix[1], matrix[3],
-                matrix[4], matrix[5]
-        );
-    }
-
-    public void transformPoint(int index, AffineTransform op){
-        if (index >=0 && index < points.size()){
-            Point2D src = points.get(index);
-            Point2D dst = new Point2D.Double();
-            op.transform(src, dst);
-            points.set(index, (Point2D.Double) dst);
+        // Wyświetlanie macierzy 4x4
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 4; i++) {
+            sb.append("[ ");
+            for (int j = 0; j < 4; j++) {
+                sb.append(String.format("%.2f ", currentTransformMatrix[i][j]));
+            }
+            sb.append("]\n");
         }
-
-        currentTransform.preConcatenate(op);
+        return sb.toString();
     }
 
-    public void transformPoints(List<Integer> indices, AffineTransform elementTransform) {
+    // Metoda do transformacji pojedynczego punktu (będzie rozbudowana)
+    public void transformPoint(int index, double[][] transformationMatrix){
+        if (index >=0 && index < points.size()){
+            Point3D src = points.get(index);
+            // Tutaj w przyszłości będzie mnożenie punktu przez macierz
+            // Na razie pozostawimy to do implementacji w Zadaniach 4 i 6
+            // Będzie to wymagało stworzenia klasy Matrix4x4 i metody multiply
+            // na razie nic tu nie zmieniamy w logice, tylko typy
+        }
+        // W przyszłości będziemy preConcatenate transformacji
+        // currentTransformMatrix = multiply(transformationMatrix, currentTransformMatrix);
+    }
+
+    // Metoda do transformacji listy punktów
+    public void transformPoints(List<Integer> indices, double[][] elementTransformMatrix) {
+        // Ta metoda będzie głównym miejscem, gdzie będziemy stosować transformacje
+        // do wierzchołków bryły
         for (int index : indices) {
             if (index >= 0 && index < points.size()) {
-                Point2D src = points.get(index);
-                Point2D dst = new Point2D.Double();
-                elementTransform.transform(src, dst);
-                points.set(index, (Point2D.Double) dst);
+                Point3D src = points.get(index);
+                // Tworzymy nowy punkt, który będzie wynikiem transformacji
+                Point3D dst = new Point3D(0, 0, 0); // Placeholder
+                // Tutaj będziemy mnożyć punkt przez macierz elementTransformMatrix
+                // Na razie tylko zmieniamy typy, implementacja mnożenia będzie później
+                // np. dst = Matrix4x4.multiply(elementTransformMatrix, src);
+                points.set(index, dst); // Zastępujemy stary punkt nowym
             }
         }
-
         // Aktualizacja macierzy przekształceń
-        currentTransform.preConcatenate(elementTransform);
+        // currentTransformMatrix = Matrix4x4.multiply(elementTransformMatrix, currentTransformMatrix);
     }
 
-    public List<Point2D.Double> calculateBezierPoints(double step) {
-        List<Point2D.Double> result = new ArrayList<>();
-        int n = points.size() - 1;
-
-        if (n < 1) return result;
-
-        for (double t = 0.0; t <= 1.0; t += step) {
-            result.add(bezierPoint(points, t));
-        }
-
-        result.add(bezierPoint(points, 1.0));
-        return result;
-    }
-
-
-    private Point2D.Double bezierPoint(List<Point2D.Double> ctrlPoints, double t) {
-        int n = ctrlPoints.size() - 1;
-        double x = 0;
-        double y = 0;
-
-        for (int i = 0; i <= n; i++) {
-            double binomial = binomialCoefficient(n, i);
-            double coefficient = binomial * Math.pow(1 - t, n - i) * Math.pow(t, i);
-            x += coefficient * ctrlPoints.get(i).x;
-            y += coefficient * ctrlPoints.get(i).y;
-        }
-
-        return new Point2D.Double(x, y);
-    }
-
-    private double binomialCoefficient(int n, int k) {
-        double result = 1;
-        for (int i = 1; i <= k; i++) {
-            result *= (n - (k - i));
-            result /= i;
-        }
-        return result;
-    }
 
     public void removePoint(int index) {
         if (index >= 0 && index < points.size()) {
@@ -114,14 +94,12 @@ public class TransformationModel {
         }
     }
 
-
-
-    public List<Point2D.Double> getTransformedPoints() {
+    public List<Point3D> getTransformedPoints() {
+        // Zwracamy kopię, aby nie modyfikować oryginalnej listy z zewnątrz
         return new ArrayList<>(points);
     }
 
-
-    public AffineTransform getCurrentTransform(){
-        return currentTransform;
+    public double[][] getCurrentTransformMatrix(){
+        return currentTransformMatrix;
     }
 }

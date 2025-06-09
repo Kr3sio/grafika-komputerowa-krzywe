@@ -1,132 +1,139 @@
 package views;
 
 import models.ImageModel;
-
+import models.MeshModel; // Nowy import
+import models.Point3D;
+import models.TransformationModel;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.Point2D;
 import java.util.List;
 
-/**
- * Panel do wyświetlania obrazu, wykorzystujący model {@link ImageModel}.
- * Panel odświeża się automatycznie po zmianie modelu.
- */
 public class ImagePanel extends JPanel {
 
-    private ImageModel model;
+    private ImageModel imageModel; // Zmieniono nazwę zmiennej, aby odróżnić od modelu 3D
+    private MeshModel meshModel;   // Nowe pole na model 3D
 
-    private boolean drawPolyline = false;
+    private List<Point3D> displayPoints = null; // Punkty wyświetlane (kontrolne)
 
-    private List<Point2D.Double> polylinePoints = null;
+    private TransformationModel transformationModel;
 
-    private List<Point2D.Double> displayPoints = null;
-
-    private boolean drawBezier = false;
-
-    private List<Point2D.Double> bezierPoints = null;
-
-    public ImagePanel(String title) {
-        setBorder(BorderFactory.createTitledBorder(title)); // Ustawienie obramowania z tytułem
-        setBackground(Color.LIGHT_GRAY); // Ustawienie koloru tła panelu
-        this.model = null;
+    public ImagePanel(String title, TransformationModel transformationModel) {
+        setBorder(BorderFactory.createTitledBorder(title));
+        setBackground(Color.LIGHT_GRAY);
+        this.imageModel = null;
+        this.meshModel = null; // Inicjalizacja nowego pola
+        this.transformationModel = transformationModel;
     }
 
     /**
-     * Ustawia nowy model obrazu i odświeża panel.
-     * @param model Nowy model obrazu do wyświetlenia.
+     * Ustawia nowy model obrazu 2D i odświeża panel.
+     * @param imageModel Nowy model obrazu 2D do wyświetlenia.
      */
-    public void setModel(ImageModel model) {
-        this.model = model;
-        this.repaint(); // Odświeżenie panelu, aby wyświetlić nowy obraz
+    public void setModel(ImageModel imageModel) {
+        this.imageModel = imageModel;
+        this.repaint();
     }
 
     public ImageModel getModel() {
-        return model;
+        return imageModel;
     }
 
-
-
     /**
-     * Przesłonięta metoda rysowania komponentu. Wyświetla obraz na środku panelu.
-     * @param g Kontekst graficzny wykorzystywany do rysowania obrazu.
+     * Ustawia nowy model siatki 3D i odświeża panel.
+     * @param meshModel Nowy model siatki 3D do wyświetlenia.
      */
+    public void setMeshModel(MeshModel meshModel) {
+        this.meshModel = meshModel;
+        this.repaint();
+    }
+
+    public MeshModel getMeshModel() {
+        return meshModel;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (model != null && model.getImage() != null) {
-            // Obliczenie współrzędnych, aby obraz był wyśrodkowany w panelu
-            int x = (getWidth() - model.getImage().getWidth()) / 2;
-            int y = (getHeight() -  model.getImage().getHeight()) / 2;
-
-            // Rysowanie obrazu na panelu
-            g.drawImage( model.getImage(), x, y, this);
+        // Rysowanie obrazu 2D, jeśli jest ustawiony
+        if (imageModel != null && imageModel.getImage() != null) {
+            int x = (getWidth() - imageModel.getImage().getWidth()) / 2;
+            int y = (getHeight() - imageModel.getImage().getHeight()) / 2;
+            g.drawImage(imageModel.getImage(), x, y, this);
         }
-        g.setColor(Color.gray);
-        int cx = getWidth()/2;
-        int cy = getHeight()/2;
-        g.drawLine(0,cy,getWidth(),cy);
-        g.drawLine(cx,0,cx,getHeight());
 
+        // Rysowanie osi układu współrzędnych (na środku panelu)
+        g.setColor(Color.gray);
+        int cx = getWidth() / 2;
+        int cy = getHeight() / 2;
+        g.drawLine(0, cy, getWidth(), cy); // Oś X
+        g.drawLine(cx, 0, cx, getHeight()); // Oś Y
+
+        // Rysowanie wierzchołków i krawędzi modelu 3D
+        if (meshModel != null && transformationModel != null) { // Dodano sprawdzenie transformationModel
+            g.setColor(Color.BLUE);
+
+            // Na razie rysujemy wszystkie krawędzie (model druciany)
+            // Bez usuwania niewidocznych linii i bez wypełniania ścian
+            // Projekcja perspektywiczna będzie w Zadaniach 5 i 6
+
+            // Pobierz aktualne wierzchołki z TransformationModel, ponieważ to on je transformuje
+            List<Point3D> transformedVertices = transformationModel.getPoints(); // Zakładamy, że transformationModel.getPoints() zwróci wszystkie wierzchołki, które są przetwarzane
+
+            if (transformedVertices != null && !transformedVertices.isEmpty()) { // Dodano sprawdzenie, czy lista nie jest pusta
+                for (models.Face face : meshModel.getFaces()) {
+                    List<Integer> indices = face.getVertexIndices();
+                    for (int i = 0; i < indices.size(); i++) {
+                        // Sprawdź, czy indeksy są w zakresie listy transformedVertices
+                        if (indices.get(i) < transformedVertices.size() && indices.get((i + 1) % indices.size()) < transformedVertices.size()) {
+                            Point3D p1_3d = transformedVertices.get(indices.get(i));
+                            Point3D p2_3d = transformedVertices.get(indices.get((i + 1) % indices.size()));
+
+                            // Konwertuj punkty 3D na 2D
+                            Point p1_2d = centeredToPanel(p1_3d);
+                            Point p2_2d = centeredToPanel(p2_3d);
+
+                            g.drawLine(p1_2d.x, p1_2d.y, p2_2d.x, p2_2d.y);
+                        } else {
+                            System.err.println("Błąd: Indeks wierzchołka poza zakresem w Face! Sprawdź plik .obj");
+                        }
+                    }
+                }
+            } else {
+                System.out.println("[DEBUG] Transformed vertices list is empty or null. Not drawing mesh lines.");
+            }
+        }
+
+
+
+        // Rysowanie wyświetlanych punktów (kontrolnych) - np. tych, które dodaliśmy myszą
         if (displayPoints != null) {
             g.setColor(Color.BLACK);
-            for (Point2D.Double pt : displayPoints) {
-                Point p = centeredToPanel(pt.x,pt.y);
+            for (Point3D pt : displayPoints) {
+                Point p = centeredToPanel(pt); // Używamy nowej metody
                 int r = 5; //promień
                 g.setColor(Color.BLACK);
-                g.fillOval((p.x -r),(p.y-r),r*2,r*2);
+                g.fillOval((p.x - r), (p.y - r), r * 2, r * 2);
             }
         }
 
-        if(drawPolyline && polylinePoints != null && polylinePoints.size() > 1) {
-            g.setColor(Color.RED);
-            for(int i = 0 ; i < polylinePoints.size()-1 ; i++) {
-                Point p1 = centeredToPanel(polylinePoints.get(i).x, polylinePoints.get(i).y);
-                Point p2 = centeredToPanel(polylinePoints.get(i+1).x, polylinePoints.get(i+1).y);
-                g.drawLine(p1.x,p1.y,p2.x,p2.y);
-            }
-        }
-        if (drawBezier && bezierPoints != null && bezierPoints.size() > 1) {
-            g.setColor(Color.BLACK);
-            for (int i = 0; i < bezierPoints.size() - 1; i++) {
-                Point p1 = centeredToPanel(bezierPoints.get(i).x, bezierPoints.get(i).y);
-                Point p2 = centeredToPanel(bezierPoints.get(i + 1).x, bezierPoints.get(i + 1).y);
-                g.drawLine(p1.x, p1.y, p2.x, p2.y);
-            }
-        }
         System.out.println("[DEBUG] repaint triggered");
-
     }
 
-    public void setDisplayedPoints(List<Point2D.Double> points) {
+    public void setDisplayedPoints(List<Point3D> points) {
         this.displayPoints = points;
         repaint();
     }
 
-    public Point panelToCentered(int x,int y){
+    public Point3D panelToCentered3D(int x, int y){
         int cx = getWidth()/2;
         int cy = getHeight()/2;
-        return new Point(x - cx, cy - y);
+        return new Point3D(x - cx, cy - y, 0); // Z=0 na tym etapie
     }
 
-    public Point centeredToPanel(double x, double y){
+    public Point centeredToPanel(Point3D p){
         int cx = getWidth()/2;
         int cy = getHeight()/2;
-        return new Point((int)(x+cx),(int)(cy-y));
+        return new Point((int)(p.x + cx),(int)(cy - p.y));
     }
-
-    public void setPolyline(List<Point2D.Double> transformedPoints, boolean enable) {
-        System.out.println("[DEBUG] setPolyline: " + (transformedPoints != null ? transformedPoints.size() : "null"));
-        this.polylinePoints = transformedPoints;
-        this.drawPolyline = enable;
-        repaint();
-    }
-
-    public void setBezierCurve(List<Point2D.Double> points, boolean enable){
-        this.bezierPoints=points;
-        this.drawBezier=enable;
-        repaint();
-    }
-
-
 }
