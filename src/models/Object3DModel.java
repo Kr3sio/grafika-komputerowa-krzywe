@@ -58,4 +58,6 @@ public class Object3DModel {
     public  void applyTransformation(double[][] matrix) {
         this.trasformMatrix = Matrix4x4.multiply(matrix, this.trasformMatrix);
     }
+
+    
 }

@@ -5,18 +5,20 @@ import models.Object3DModel;
 import views.Transformation3DPanel;
 
 import javax.swing.*;
-import java.util.function.DoubleSupplier;
 
 public class Transformation3DController {
 
     private final Object3DModel model;
     private final Transformation3DPanel panel;
-    private final JTextArea matrixDisplay; // np. z `MainFrame` lub osobnego panelu
+    private final JTextArea matrixDisplay;
+    private final JComponent renderTarget;
 
-    public Transformation3DController(Object3DModel model, Transformation3DPanel panel, JTextArea matrixDisplay) {
+    public Transformation3DController(Object3DModel model, Transformation3DPanel panel,
+                                      JTextArea matrixDisplay, JComponent renderTarget) {
         this.model = model;
         this.panel = panel;
         this.matrixDisplay = matrixDisplay;
+        this.renderTarget = renderTarget;
 
         panel.getApplyButton().addActionListener(e -> applyTransformations());
     }
@@ -28,11 +30,16 @@ public class Transformation3DController {
         double[][] ry = Matrix4x4.rotationY(panel.getRy());
         double[][] rz = Matrix4x4.rotationZ(panel.getRz());
 
-        // Kolejność: rotacje -> skalowanie -> translacja
-        double[][] composed = Matrix4x4.multiply(t, Matrix4x4.multiply(s, Matrix4x4.multiply(rz, Matrix4x4.multiply(ry, rx))));
+        // Kolejność: rotacje → skalowanie → przesunięcie
+        double[][] composed =
+                Matrix4x4.multiply(t,
+                        Matrix4x4.multiply(s,
+                                Matrix4x4.multiply(rz,
+                                        Matrix4x4.multiply(ry, rx))));
 
         model.applyTransformation(composed);
         updateMatrixDisplay();
+        renderTarget.repaint(); // wymusza przerysowanie modelu
     }
 
     private void updateMatrixDisplay() {
@@ -47,4 +54,3 @@ public class Transformation3DController {
         matrixDisplay.setText(sb.toString());
     }
 }
-
