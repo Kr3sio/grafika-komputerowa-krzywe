@@ -1,12 +1,16 @@
 package models;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class Face {
-    public final List<Integer> indices;
+    private final List<Integer> vertexIndices;
 
-    public Face(List<Integer> indices){
-        this.indices = indices;
+    public Face(List<Integer> vertexIndices) {
+        this.vertexIndices = new ArrayList<>(vertexIndices); // Kopiujemy listę
     }
 
+    public List<Integer> getVertexIndices() {
+        return vertexIndices;
+    }
 }

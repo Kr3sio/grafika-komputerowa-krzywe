@@ -1,28 +1,29 @@
 package views;
 
 import models.ImageModel;
-import models.MeshModel; // Nowy import
+import models.MeshModel;
 import models.Point3D;
-import models.TransformationModel;
+import models.TransformationModel; // Dodaj ten import!
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
 public class ImagePanel extends JPanel {
 
-    private ImageModel imageModel; // Zmieniono nazwę zmiennej, aby odróżnić od modelu 3D
-    private MeshModel meshModel;   // Nowe pole na model 3D
+    private ImageModel imageModel;
+    private MeshModel meshModel;
+    private List<Point3D> displayPoints = null;
 
-    private List<Point3D> displayPoints = null; // Punkty wyświetlane (kontrolne)
-
+    // NOWE: Dodaj pole transformationModel
     private TransformationModel transformationModel;
 
+    // Zmodyfikowany konstruktor, aby przyjmował TransformationModel
     public ImagePanel(String title, TransformationModel transformationModel) {
         setBorder(BorderFactory.createTitledBorder(title));
         setBackground(Color.LIGHT_GRAY);
         this.imageModel = null;
-        this.meshModel = null; // Inicjalizacja nowego pola
-        this.transformationModel = transformationModel;
+        this.meshModel = null;
+        this.transformationModel = transformationModel; // Inicjalizacja pola
     }
 
     /**
@@ -70,24 +71,22 @@ public class ImagePanel extends JPanel {
         g.drawLine(cx, 0, cx, getHeight()); // Oś Y
 
         // Rysowanie wierzchołków i krawędzi modelu 3D
-        if (meshModel != null && transformationModel != null) { // Dodano sprawdzenie transformationModel
+        if (meshModel != null && transformationModel != null) {
             g.setColor(Color.BLUE);
 
-            // Na razie rysujemy wszystkie krawędzie (model druciany)
-            // Bez usuwania niewidocznych linii i bez wypełniania ścian
-            // Projekcja perspektywiczna będzie w Zadaniach 5 i 6
+            // Pobierz aktualne WIERZCHOŁKI BRYŁY z TransformationModel, po transformacji
+            List<Point3D> transformedMeshVertices = transformationModel.getTransformedVertices(); // Używamy nowej metody
 
-            // Pobierz aktualne wierzchołki z TransformationModel, ponieważ to on je transformuje
-            List<Point3D> transformedVertices = transformationModel.getPoints(); // Zakładamy, że transformationModel.getPoints() zwróci wszystkie wierzchołki, które są przetwarzane
-
-            if (transformedVertices != null && !transformedVertices.isEmpty()) { // Dodano sprawdzenie, czy lista nie jest pusta
+            if (transformedMeshVertices != null && !transformedMeshVertices.isEmpty()) {
                 for (models.Face face : meshModel.getFaces()) {
                     List<Integer> indices = face.getVertexIndices();
                     for (int i = 0; i < indices.size(); i++) {
-                        // Sprawdź, czy indeksy są w zakresie listy transformedVertices
-                        if (indices.get(i) < transformedVertices.size() && indices.get((i + 1) % indices.size()) < transformedVertices.size()) {
-                            Point3D p1_3d = transformedVertices.get(indices.get(i));
-                            Point3D p2_3d = transformedVertices.get(indices.get((i + 1) % indices.size()));
+                        // Sprawdź, czy indeksy są w zakresie listy transformedMeshVertices
+                        int idx1 = indices.get(i);
+                        int idx2 = indices.get((i + 1) % indices.size());
+                        if (idx1 < transformedMeshVertices.size() && idx2 < transformedMeshVertices.size()) {
+                            Point3D p1_3d = transformedMeshVertices.get(idx1);
+                            Point3D p2_3d = transformedMeshVertices.get(idx2);
 
                             // Konwertuj punkty 3D na 2D
                             Point p1_2d = centeredToPanel(p1_3d);
@@ -95,18 +94,18 @@ public class ImagePanel extends JPanel {
 
                             g.drawLine(p1_2d.x, p1_2d.y, p2_2d.x, p2_2d.y);
                         } else {
-                            System.err.println("Błąd: Indeks wierzchołka poza zakresem w Face! Sprawdź plik .obj");
+                            System.err.println("Błąd: Indeks wierzchołka poza zakresem w Face! Sprawdź plik .obj lub logikę ładowania/transformacji.");
                         }
                     }
                 }
             } else {
-                System.out.println("[DEBUG] Transformed vertices list is empty or null. Not drawing mesh lines.");
+                System.out.println("[DEBUG] Transformed mesh vertices list is empty or null. Not drawing mesh lines.");
             }
         }
 
 
-
-        // Rysowanie wyświetlanych punktów (kontrolnych) - np. tych, które dodaliśmy myszą
+        // Rysowanie wyświetlanych punktów (kontrolnych, dodanych myszą)
+        // Te punkty nie są objęte globalną transformacją bryły na razie
         if (displayPoints != null) {
             g.setColor(Color.BLACK);
             for (Point3D pt : displayPoints) {
