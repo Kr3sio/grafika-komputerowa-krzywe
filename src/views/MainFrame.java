@@ -32,7 +32,7 @@ public class MainFrame extends JFrame {
     private final TransformationPanel transformationPanel;
 
     public MainFrame() {
-        super("Grafika komputerowa - 3D");
+        super("Grafika komputerowa - 3D"); // Zmieniono tytuł
         setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
         setLayout(new BorderLayout());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -41,7 +41,7 @@ public class MainFrame extends JFrame {
         transformationModel = new TransformationModel(); // TransformationModel musi być zainicjalizowany PRZED ImagePanel
         Panel = new ImagePanel("Scena 3D", transformationModel); // Zmieniono: przekazujemy transformationModel
         menuBar = new MenuBar();
-        transformationPanel = new TransformationPanel();
+        transformationPanel = new TransformationPanel(); // Inicjalizacja transformationPanel
 
         // Inicjalizacja kontrolerów
         imageController = new ImageController(this, transformationModel);
@@ -49,13 +49,16 @@ public class MainFrame extends JFrame {
 
 
         // Utworzenie kontenera do organizacji komponentów interfejsu użytkownika
-        JPanel contentPanel = new JPanel(new GridLayout(1, 2, 5, 5));
+        // Tutaj można by rozważyć np. podział na 3 panele (lewy, środkowy, prawy) zamiast tylko 2
+        // Na razie pozostawiamy prostą strukturę, gdzie ImagePanel jest centralny, a TransformationPanel na dole.
+        JPanel contentPanel = new JPanel(new GridLayout(1, 1, 5, 5)); // Zmieniono na 1,1 jeśli ImagePanel jest jedyny w centralnej części
         contentPanel.add(Panel);
-        add(contentPanel, BorderLayout.CENTER);
+        add(contentPanel, BorderLayout.CENTER); // ImagePanel zajmuje centralną część
 
         // Panel transformacji
+        // To jest główny panel operacji i punktów
         TransformationController transformationController = new TransformationController(transformationPanel, Panel, transformationModel, menuBar);
-        add(transformationPanel, BorderLayout.SOUTH);
+        add(transformationPanel, BorderLayout.SOUTH); // Panel transformacji na dole okna
 
         // Pasek menu
         setJMenuBar(menuBar); // Dodanie menu do okna
@@ -70,7 +73,7 @@ public class MainFrame extends JFrame {
     }
 
     /**
-     * Zwraca instancję TransformationPanel.
+     * **Nowa metoda**: Zwraca instancję TransformationPanel.
      * Jest potrzebna, aby ImageController mógł odświeżyć listę punktów
      * po załadowaniu modelu 3D z pliku.
      */
@@ -82,21 +85,29 @@ public class MainFrame extends JFrame {
      * Dostosowuje rozmiar okna do załadowanego obrazu z lewego panelu.
      * Na tym etapie funkcjonalność dostosowywania do obrazu nie będzie używana
      * dla obiektów 3D, ale metoda zostaje zachowana.
+     *
+     * @see javax.swing.JFrame#setSize(int, int)
+     * @see javax.swing.JFrame#setLocationRelativeTo(java.awt.Component)
      */
     public void adjustWindowSize() {
+        // Ten kod był do dostosowywania okna do obrazu 2D.
+        // Dla 3D obiektów nie będziemy go używać w ten sam sposób,
+        // ale pozostawiamy metodę.
         var image = Panel.getModel();
         if (image == null || image.getImage() == null) {
             return;
         }
 
-        int newWidth = Math.max(getWidth(), image.getImage().getWidth() * 2 + 100);
+        int newWidth = Math.max(getWidth(), image.getImage().getWidth() + 100); // Dostosowano, jeśli panel jest jeden
         int newHeight = Math.max(getHeight(), image.getImage().getHeight() + 100);
         setSize(newWidth, newHeight);
         setLocationRelativeTo(null);
     }
 
     /**
-     * Ustawia nasłuchiwacze dla elementów menu.
+     * @see java.awt.event.ActionListener
+     * @see java.awt.event.ActionListener#actionPerformed(ActionEvent)
+     * @see javax.swing.AbstractButton#addActionListener(ActionListener)
      */
     private void setMenuBarListeners() {
         menuBar.getOpenFileMenuItem().addActionListener(_ -> showFileChooserDialog());
@@ -107,11 +118,16 @@ public class MainFrame extends JFrame {
 
 
     /**
-     * Metoda otwiera okno dialogowe wyboru pliku graficznego lub modelu 3D.
+     * Metoda otwiera okno dialogowe wyboru pliku graficznego.
+     * Nadal wczytuje obrazy 2D, ale teraz również pliki OBJ.
+     *
+     * @see JFileChooser
+     * @see ImageController#loadImage(File)
      */
     private void showFileChooserDialog() {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Wybierz plik graficzny lub model 3D (.obj)");
+        fileChooser.setDialogTitle("Wybierz plik graficzny lub model 3D (.obj)"); // Zmieniono tekst
+        // Dodaj filtr dla plików OBJ, jeśli chcesz
         fileChooser.setFileFilter(new FileNameExtensionFilter("Obrazy (BMP, PNG) i Modele 3D (OBJ)", "bmp", "png", "obj"));
         int returnValue = fileChooser.showOpenDialog(this);
 
@@ -124,10 +140,13 @@ public class MainFrame extends JFrame {
     /**
      * Metoda otwiera okno dialogowe zapisu pliku graficznego.
      * Nadal dotyczy zapisu obrazu 2D.
+     *
+     * @see JFileChooser
+     * @see FileController#saveFile(File)
      */
     private void showSaveFileDialog() {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Zapisz obraz (na razie tylko 2D)");
+        fileChooser.setDialogTitle("Zapisz obraz (na razie tylko 2D)"); // Zmieniono tekst
         fileChooser.setFileFilter(new FileNameExtensionFilter("BMP & PNG Images", "bmp", "png"));
         int returnValue = fileChooser.showSaveDialog(this);
 

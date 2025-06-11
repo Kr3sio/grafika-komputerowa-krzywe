@@ -71,7 +71,7 @@ public class Matrix4x4 {
         double transformedW = matrix.data[3][0] * x + matrix.data[3][1] * y + matrix.data[3][2] * z + matrix.data[3][3] * w;
 
         // Normalizacja (jeśli transformedW != 1, co często ma miejsce przy projekcji perspektywicznej)
-        if (transformedW != 0 && transformedW != 1) {
+        if (transformedW != 0) {
             transformedX /= transformedW;
             transformedY /= transformedW;
             transformedZ /= transformedW;
@@ -161,6 +161,21 @@ public class Matrix4x4 {
                 {0, 0, 1, 0},
                 {0, 0, 0, 1}
         });
+    }
+
+    public static Matrix4x4 perspective(double fovY, double aspectRatio, double near, double far ) {
+        double fovRad = Math.toRadians(fovY);
+        double tanHalfFov = Math.tan(fovRad/2.0);
+
+        double[][] data = new double[4][4];
+        data[0][0] = 1.0 / (aspectRatio * tanHalfFov);
+        data[1][1] = 1.0 / tanHalfFov;
+        data[2][2] = -(far + near)/(far-near);
+        data[2][3] = -(2.0 * far * near)/(far-near);
+        data[3][2] = -10.;
+        data[3][3] = 0.0;
+
+        return new Matrix4x4(data);
     }
 
     /**
