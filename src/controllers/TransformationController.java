@@ -111,18 +111,8 @@ public class TransformationController {
             }
         });
 
-        // NOWY LISTENER: Zmiana odległości
-        operationPanel.getChangeDistanceButton().addActionListener(e -> {
-            try {
-                double dz = Double.parseDouble(operationPanel.getDistanceValue());
-                // Zmiana odległości to po prostu translacja w osi Z
-                Matrix4x4 distanceTranslateMatrix = Matrix4x4.translation(0, 0, dz);
-                model.applyTransformation(distanceTranslateMatrix);
-                updateDisplay();
-            } catch (NumberFormatException ex) {
-                showError("Nieprawidłowa wartość odległości.");
-            }
-        });
+        // UWAGA: Usunięto listener dla changeDistanceButton, ponieważ ta funkcjonalność została przeniesiona.
+        // operationPanel.getChangeDistanceButton().addActionListener(e -> { ... });
 
 
         pointListPanel.getRemovePointButton().addActionListener(e -> {

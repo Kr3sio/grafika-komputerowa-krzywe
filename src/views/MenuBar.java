@@ -33,15 +33,10 @@ public class MenuBar extends JMenuBar {
     private final JMenu view3DMenu;
 
     private final JRadioButtonMenuItem orthoProjectionItem;
-
     private final JRadioButtonMenuItem perspectiveProjectionItem;
-
     private final JCheckBoxMenuItem visibleOnlyFaceItem;
 
     private final JTextField observerDistanceField;
-
-
-
 
     public MenuBar() {
         // Tworzenie głównych menu
@@ -95,20 +90,20 @@ public class MenuBar extends JMenuBar {
 
         view3DMenu = new JMenu("Widok 3D");
 
-        orthoProjectionItem = new JRadioButtonMenuItem("Rzut równoległy",true);
+        orthoProjectionItem = new JRadioButtonMenuItem("Rzut równoległy",true); // Domyślnie równoległy
         perspectiveProjectionItem = new JRadioButtonMenuItem("Rzut perspektywiczny");
         visibleOnlyFaceItem = new JCheckBoxMenuItem("Tylko widoczne ściany");
 
-        ButtonGroup projectionGrou = new ButtonGroup();
-        projectionGrou.add(orthoProjectionItem);
-        projectionGrou.add(perspectiveProjectionItem);
+        ButtonGroup projectionGroup = new ButtonGroup(); // Poprawiona nazwa zmiennej
+        projectionGroup.add(orthoProjectionItem);
+        projectionGroup.add(perspectiveProjectionItem);
 
-        observerDistanceField = new JTextField("100",5);
+        observerDistanceField = new JTextField("10.0",5);
 
         view3DMenu.add(orthoProjectionItem);
         view3DMenu.add(perspectiveProjectionItem);
         view3DMenu.addSeparator();
-        view3DMenu.add(new JLabel("Odległość obserwatora (d): "));
+        view3DMenu.add(new JLabel("Odległość obserwatora (Z): "));
         view3DMenu.add(observerDistanceField);
         view3DMenu.addSeparator();
         view3DMenu.add(visibleOnlyFaceItem);
@@ -142,17 +137,31 @@ public class MenuBar extends JMenuBar {
     public JCheckBoxMenuItem getShowBezierCurveMenuItem(){return showBezierCurveMenuItem;}
     public JMenuItem getClearCurveMenuItem() {return clearCurveMenuItem;}
     public JMenuItem getGenerateTextCurveMenuItem() {return generateTextCurveMenuItem;}
-    public boolean isOrthoProjectionSelected() { return orthoProjectionItem.isSelected(); } // [3D]
-    public boolean isPerspectiveProjectionSelected() { return perspectiveProjectionItem.isSelected(); } // [3D]
-    public boolean isVisibleOnlySelected() { return visibleOnlyFaceItem.isSelected(); } // [3D]
-    public double getObserverDistance() { // [3D]
+    public boolean isOrthoProjectionSelected() { return orthoProjectionItem.isSelected(); }
+    public boolean isPerspectiveProjectionSelected() { return perspectiveProjectionItem.isSelected(); }
+    public boolean isVisibleOnlySelected() { return visibleOnlyFaceItem.isSelected(); }
+    public double getObserverDistance() {
         try {
             return Double.parseDouble(observerDistanceField.getText());
         } catch (NumberFormatException e) {
-            return 100.0;
+            return 10.0;
         }
     }
 
+    public JTextField getObserverDistanceField() {
+        return observerDistanceField;
+    }
 
+    // NOWE GETTERY DLA PRZYCISKÓW WIDOKU 3D
+    public JCheckBoxMenuItem getVisibleOnlyFaceItem() {
+        return visibleOnlyFaceItem;
+    }
 
+    public JRadioButtonMenuItem getOrthoProjectionItem() {
+        return orthoProjectionItem;
+    }
+
+    public JRadioButtonMenuItem getPerspectiveProjectionItem() {
+        return perspectiveProjectionItem;
+    }
 }

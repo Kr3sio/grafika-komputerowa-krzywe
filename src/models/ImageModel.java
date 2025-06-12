@@ -29,11 +29,7 @@ public class ImageModel {
         this.image = image;
     }
 
-    /**
-     * Tworzy i zwraca kopię obrazu. Nowy obraz jest kopiowany piksel po pikselu
-     *
-     * @return Kopia obrazu jako {@link BufferedImage}.
-     */
+
     public BufferedImage getCopyImage() {
         BufferedImage copy = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
         Graphics2D g = copy.createGraphics();

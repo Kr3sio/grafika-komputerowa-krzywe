@@ -18,9 +18,6 @@ public class OperationPanel extends JPanel {
     private final JTextField translateYField = new JTextField("0", 5);
     private final JTextField translateZField = new JTextField("0", 5);
 
-    // Pole dla zmiany odległości
-    private final JTextField distanceField = new JTextField("0", 5);
-
 
     // Przyciski
     private final JButton rotateXButton;
@@ -30,12 +27,7 @@ public class OperationPanel extends JPanel {
     private final JButton scaleButton;
     private final JButton translateButton;
 
-    // Przycisk dla zmiany odległości
-    private final JButton changeDistanceButton;
-
-
     public OperationPanel() {
-        // Główny layout OperationPanel będzie nadal FlowLayout, aby ułożyć grupy obok siebie
         setLayout(new FlowLayout(FlowLayout.LEFT, 10, 5));
         setBorder(BorderFactory.createTitledBorder("Operacje na obiekcie"));
 
@@ -57,7 +49,7 @@ public class OperationPanel extends JPanel {
         rotateGroup.add(new JLabel("Oś Z:"));
         rotateGroup.add(rotateZField);
         rotateGroup.add(rotateZButton);
-        add(rotateGroup); // Dodaj grupę do OperationPanel
+        add(rotateGroup);
 
         // 2. Grupa dla skalowania
         JPanel scaleGroup = new JPanel(new GridLayout(4, 2, 5, 2));
@@ -70,12 +62,12 @@ public class OperationPanel extends JPanel {
         scaleGroup.add(scaleYField);
         scaleGroup.add(new JLabel("Skala Z:"));
         scaleGroup.add(scaleZField);
-        scaleGroup.add(new JLabel("")); // Puste pole na dopasowanie do GridLayout
+        scaleGroup.add(new JLabel(""));
         scaleGroup.add(scaleButton);
-        add(scaleGroup); // Dodaj grupę do OperationPanel
+        add(scaleGroup);
 
-        // 3. Grupa dla przesunięcia (bez zmiany odległości)
-        JPanel translateGroup = new JPanel(new GridLayout(4, 2, 5, 2)); // 4 wiersze dla przycisku
+        // 3. Grupa dla przesunięcia
+        JPanel translateGroup = new JPanel(new GridLayout(4, 2, 5, 2));
         translateGroup.setBorder(BorderFactory.createTitledBorder("Przesunięcie"));
         translateButton = new JButton("Przesuń");
 
@@ -85,24 +77,14 @@ public class OperationPanel extends JPanel {
         translateGroup.add(translateYField);
         translateGroup.add(new JLabel("Przesunięcie Z:"));
         translateGroup.add(translateZField);
-        translateGroup.add(new JLabel("")); // Puste pole
+        translateGroup.add(new JLabel(""));
         translateGroup.add(translateButton);
-        add(translateGroup); // Dodaj grupę do OperationPanel
+        add(translateGroup);
 
-        // 4. NOWA GRUPA: Zmiana odległości
-        JPanel distanceGroup = new JPanel(new GridLayout(2, 2, 5, 2)); // 2 wiersze, 2 kolumny
-        distanceGroup.setBorder(BorderFactory.createTitledBorder("Zmień Odległość"));
-        changeDistanceButton = new JButton("Zmień Odległość");
+        // UWAGA: Usunięto grupę "Zmiana odległości", ponieważ została przeniesiona do MenuBar
 
-        distanceGroup.add(new JLabel("Odległość (Z):"));
-        distanceGroup.add(distanceField);
-        distanceGroup.add(new JLabel("")); // Puste pole, żeby przycisk był w drugiej kolumnie
-        distanceGroup.add(changeDistanceButton);
-        add(distanceGroup); // Dodaj nową grupę do OperationPanel
-
-        // Dostosuj preferowany i maksymalny rozmiar, aby pomieścić cztery grupy
-        setPreferredSize(new Dimension(1000, 160)); // Zwiększ szerokość
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 180)); // Ogranicz wysokość
+        setPreferredSize(new Dimension(1000, 160));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
     }
 
     // --- Gettery dla pól i przycisków ---
@@ -124,7 +106,5 @@ public class OperationPanel extends JPanel {
     public String getTranslateZValue() { return translateZField.getText(); }
     public JButton getTranslateButton() {return  translateButton;}
 
-    // Gettery dla pola i przycisku zmiany odległości
-    public String getDistanceValue() { return distanceField.getText(); }
-    public JButton getChangeDistanceButton() { return changeDistanceButton; }
+    // UWAGA: Usunięto gettery dla pól i przycisków zmiany odległości
 }

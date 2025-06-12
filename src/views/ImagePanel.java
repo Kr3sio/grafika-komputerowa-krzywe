@@ -27,11 +27,17 @@ public class ImagePanel extends JPanel {
     // Parametry kamery (do projekcji perspektywicznej)
     private double fovY = 60.0;
     private double near = 0.1;
-    private double far = 100.0; // Zmniejszyłem far dla lepszej kontroli na początku
+    private double far = 100.0;
 
-    private Point3D eye = new Point3D(0,0,-10);
-    private  Point3D center = new Point3D(0,0,0);
+    private double observerDistance = 10.0;
+
+    private Point3D eye = new Point3D(0,0,observerDistance);
+    private Point3D center = new Point3D(0,0,0);
     private Point3D up = new Point3D(0,1,0);
+
+    // NOWE FLAGI DLA FUNKCJI
+    private boolean visibleOnlyFace = false; // Czy rysować tylko widoczne ściany
+    private boolean orthoProjectionSelected = false; // Czy rzutować ortograficznie (true) czy perspektywicznie (false)
 
     public ImagePanel(String title, TransformationModel transformationModel) {
         setBorder(BorderFactory.createTitledBorder(title));
@@ -39,10 +45,7 @@ public class ImagePanel extends JPanel {
         this.imageModel = null;
         this.meshModel = null;
         this.transformationModel = transformationModel;
-        // Inicjalizacja buforów w invalidate() i initBuffers()
     }
-
-
 
     private void initBuffers() {
         int width = getWidth();
@@ -55,12 +58,10 @@ public class ImagePanel extends JPanel {
             zBuffer = new double[width][height];
         }
 
-        // Wyczyść Z-bufor dla nowej klatki
         for (int x = 0; x < width; x++) {
             Arrays.fill(zBuffer[x], Double.POSITIVE_INFINITY);
         }
 
-        // Wyczyść bufor obrazu kolorem tła
         Graphics2D g2dBuffer = bufferImage.createGraphics();
         g2dBuffer.setColor(getBackground());
         g2dBuffer.fillRect(0, 0, width, height);
@@ -72,38 +73,67 @@ public class ImagePanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        // Upewnij się, że bufory są zainicjalizowane i mają poprawny rozmiar
         initBuffers();
 
-        // Pobieramy Graphics2D z bufora obrazu, aby rysować na nim wszystko
         Graphics2D g2dBuffer = bufferImage.createGraphics();
 
-        // Rysowanie obrazu 2D (jeśli jest ustawiony)
         if (imageModel != null && imageModel.getImage() != null) {
             int x = (getWidth() - imageModel.getImage().getWidth()) / 2;
             int y = (getHeight() - imageModel.getImage().getHeight()) / 2;
             g2dBuffer.drawImage(imageModel.getImage(), x, y, this);
         }
 
-        // Rysowanie osi układu współrzędnych (na środku panelu)
         g2dBuffer.setColor(Color.gray);
         int cx = getWidth() / 2;
         int cy = getHeight() / 2;
-        g2dBuffer.drawLine(0, cy, getWidth(), cy); // Oś X
-        g2dBuffer.drawLine(cx, 0, cx, getHeight()); // Oś Y
+        g2dBuffer.drawLine(0, cy, getWidth(), cy);
+        g2dBuffer.drawLine(cx, 0, cx, getHeight());
 
 
-        // Rysowanie wierzchołków i krawędzi modelu 3D
         if (meshModel != null && transformationModel != null && bufferImage != null) {
             List<Point3D> transformedMeshVertices = transformationModel.getTransformedVertices();
 
             if (transformedMeshVertices != null && !transformedMeshVertices.isEmpty()) {
 
                 double aspectRatio = (double) getWidth() / getHeight();
-                Matrix4x4 projectionMatrix = Matrix4x4.perspective(fovY, aspectRatio, near, far);
-                Matrix4x4 viewMatrix = Matrix4x4.lookAt(eye, center, up);
 
-                for (Face face : meshModel.getFaces()) { // TERAZ UŻYWA models.Face
+                // Wybór macierzy projekcji
+                Matrix4x4 projectionMatrix;
+                if (orthoProjectionSelected) {
+                    // Współrzędne ortograficzne (można je dostosować do rozmiaru sześcianu i panelu)
+                    // Ważne: lewo/prawo/dół/góra powinny odpowiadać zakresowi świata, który chcemy widzieć
+                    // np. dla sześcianu -1 do 1, a dla panelu od -width/2 do width/2.
+                    // Spróbujmy na początek z zakresem dopasowanym do panelu, ale z wyśrodkowaniem.
+                    double orthoWidth = getWidth() / 2.0;
+                    double orthoHeight = getHeight() / 2.0;
+                    projectionMatrix = Matrix4x4.orthographic(-orthoWidth, orthoWidth, -orthoHeight, orthoHeight, near, far);
+                } else {
+                    projectionMatrix = Matrix4x4.perspective(fovY, aspectRatio, near, far);
+                }
+
+
+                Point3D currentEye = new Point3D(0, 0, observerDistance);
+                Matrix4x4 viewMatrix = Matrix4x4.lookAt(currentEye, center, up);
+
+                for (Face face : meshModel.getFaces()) {
+                    // === LOGIKA BACK-FACE CULLING ===
+                    if (visibleOnlyFace) {
+                        if (face.getVertexIndices().size() < 3) continue; // Pomiń niekompletne ściany
+
+                        Point3D faceNormal = face.calculateNormal(transformedMeshVertices);
+                        // Wektor od kamery do pierwszego wierzchołka ściany (lub dowolnego wierzchołka ściany)
+                        Point3D faceVertex = transformedMeshVertices.get(face.getVertexIndices().get(0));
+                        Point3D viewVector = Point3D.subtract(faceVertex, currentEye); // Wektor od kamery do wierzchołka
+
+                        // Iloczyn skalarny: (normalna DOT viewVector)
+                        // Jeśli (normalna DOT viewVector) > 0, to normalna i wektor do kamery są w tym samym kierunku,
+                        // co oznacza, że kamera patrzy na "tylną" stronę ściany (dla standardowej konwencji CCW)
+                        if (Point3D.dotProduct(faceNormal, viewVector) > 0) { // Zmień operator jeśli konwencja normalnych jest inna
+                            continue; // Pomiń rysowanie tej ściany
+                        }
+                    }
+                    // === KONIEC LOGIKI BACK-FACE CULLING ===
+
                     List<Integer> indices = face.getVertexIndices();
                     for (int i = 0; i < indices.size(); i++) {
                         int idx1 = indices.get(i);
@@ -128,10 +158,8 @@ public class ImagePanel extends JPanel {
                                 drawLineWithZBuffer(
                                         p1_screen.x, p1_screen.y, p1_projected.z,
                                         p2_screen.x, p2_screen.y, p2_projected.z,
-                                        Color.BLUE // Kolor linii
+                                        Color.BLUE
                                 );
-                            } else {
-                                // Linia poza frustumem Z (nie rysujemy jej)
                             }
                         } else {
                             System.err.println("Błąd: Indeks wierzchołka poza zakresem w Face! Sprawdź plik .obj lub logikę ładowania/transformacji.");
@@ -143,20 +171,40 @@ public class ImagePanel extends JPanel {
             }
         }
 
-        // Rysowanie wyświetlanych punktów (kontrolnych, dodanych myszą)
         if (displayPoints != null) {
+            double aspectRatio = (double) getWidth() / getHeight();
+
+            // Wybór macierzy projekcji również dla punktów
+            Matrix4x4 projectionMatrix;
+            if (orthoProjectionSelected) {
+                double orthoWidth = getWidth() / 2.0;
+                double orthoHeight = getHeight() / 2.0;
+                projectionMatrix = Matrix4x4.orthographic(-orthoWidth, orthoWidth, -orthoHeight, orthoHeight, near, far);
+            } else {
+                projectionMatrix = Matrix4x4.perspective(fovY, aspectRatio, near, far);
+            }
+
+            Point3D currentEye = new Point3D(0, 0, observerDistance);
+            Matrix4x4 viewMatrix = Matrix4x4.lookAt(currentEye, center, up);
+
             g2dBuffer.setColor(Color.RED);
             for (Point3D pt : displayPoints) {
-                Point p = centeredToPanel(pt);
-                int r = 5;
-                g2dBuffer.fillOval((p.x - r), (p.y - r), r * 2, r * 2);
+                Point3D transformedPt_view = Matrix4x4.transformPoint(viewMatrix, pt);
+                Point3D transformedPt_projected = Matrix4x4.transformPoint(projectionMatrix, transformedPt_view);
+
+                if (transformedPt_projected.z >= -1.0 && transformedPt_projected.z <= 1.0) {
+                    Point p_screen = ndcToScreen(transformedPt_projected);
+                    int r = 5;
+                    if (p_screen.x >= 0 && p_screen.x < getWidth() && p_screen.y >= 0 && p_screen.y < getHeight()) {
+                        if (transformedPt_projected.z < zBuffer[p_screen.x][p_screen.y]) {
+                            g2dBuffer.fillOval((p_screen.x - r), (p_screen.y - r), r * 2, r * 2);
+                        }
+                    }
+                }
             }
         }
 
-        // Zwalniamy kontekst graficzny dla bufora
         g2dBuffer.dispose();
-
-        // Na koniec, narysuj zawartość bufora obrazu na panelu
         g.drawImage(bufferImage, 0, 0, this);
     }
 
@@ -187,20 +235,18 @@ public class ImagePanel extends JPanel {
         double currentZ;
 
         while(true) {
-            // Oblicz t na podstawie aktualnej pozycji (x,y) względem (x0,y0) i (x1,y1)
             double t = 0.0;
-            if (dx > dy) { // Dominująca oś to X
-                if (x1 != x0) { // Unikaj dzielenia przez zero
+            if (dx > dy) {
+                if (x1 != x0) {
                     t = (double)(currentX - x0) / (x1 - x0);
                 }
-            } else if (dy > 0) { // Dominująca oś to Y
-                if (y1 != y0) { // Unikaj dzielenia przez zero
+            } else if (dy > 0) {
+                if (y1 != y0) {
                     t = (double)(currentY - y0) / (y1 - y0);
                 }
             }
-            // If dx and dy are 0 (single point), t will remain 0.0.
 
-            currentZ = z0 + t * (z1 - z0); // Interpolacja Z
+            currentZ = z0 + t * (z1 - z0);
 
             setPixel(currentX, currentY, currentZ, color);
 
@@ -212,8 +258,6 @@ public class ImagePanel extends JPanel {
         }
     }
 
-    // Pozostałe metody (setModel, getModel, setMeshModel, getMeshModel, setDisplayedPoints,
-    // panelToCentered3D, centeredToPanel, invalidate) pozostają bez zmian
     public void setModel(ImageModel imageModel) {
         this.imageModel = imageModel;
         this.repaint();
@@ -253,5 +297,22 @@ public class ImagePanel extends JPanel {
     public void invalidate() {
         super.invalidate();
         initBuffers();
+    }
+
+    public void setObserverDistance(double distance) {
+        this.observerDistance = distance;
+        this.eye = new Point3D(0, 0, observerDistance);
+        repaint();
+    }
+
+
+    public void setVisibleOnlyFace(boolean b) {
+        this.visibleOnlyFace = b;
+        repaint();
+    }
+
+    public void setOrthoProjectionSelected(boolean b) {
+        this.orthoProjectionSelected = b;
+        repaint();
     }
 }

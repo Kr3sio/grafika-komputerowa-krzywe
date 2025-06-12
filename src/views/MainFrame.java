@@ -50,19 +50,15 @@ public class MainFrame extends JFrame {
                 operationPanel, pointListPanel, matrixDisplayPanel, Panel, transformationModel, menuBar
         );
 
-        // --- Układ paneli w MainFrame ---
         add(Panel, BorderLayout.CENTER);
 
-        // Panel prawy (tylko lista punktów)
         add(pointListPanel, BorderLayout.EAST);
 
-        // Panel dolny (Operacje i Macierz obok siebie)
         JPanel bottomPanel = new JPanel();
-        bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.X_AXIS)); // Rozkłada komponenty poziomo
+        bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.X_AXIS));
 
-        // Upewnij się, że OperationPanel i MatrixDisplayPanel mają ustawione preferowane/maksymalne rozmiary
         bottomPanel.add(operationPanel);
-        bottomPanel.add(Box.createHorizontalStrut(10)); // Mała przerwa
+        bottomPanel.add(Box.createHorizontalStrut(10));
         bottomPanel.add(matrixDisplayPanel);
 
         add(bottomPanel, BorderLayout.SOUTH);
@@ -92,12 +88,6 @@ public class MainFrame extends JFrame {
         if (image == null || image.getImage() == null) {
             return;
         }
-        // Ta metoda jest raczej dla 2D; dla 3D chcemy stałe, duże okno
-        // Jeśli chcesz, aby okno było zawsze dostosowane, to możesz ją zresetować
-        // int newWidth = Math.max(getWidth(), image.getImage().getWidth() + 100);
-        // int newHeight = Math.max(getHeight(), image.getImage().getHeight() + 100);
-        // setSize(newWidth, newHeight);
-        // setLocationRelativeTo(null);
     }
 
     private void setMenuBarListeners() {
@@ -105,6 +95,29 @@ public class MainFrame extends JFrame {
         menuBar.getSaveFileMenuItem().addActionListener(_ -> showSaveFileDialog());
         menuBar.getExitMenuItem().addActionListener(_ -> System.exit(0));
         menuBar.getClearLeftPanelMenuItem().addActionListener(_ -> imageController.clearLeftPanel());
+
+        menuBar.getObserverDistanceField().addActionListener(e -> {
+            try {
+                double distance = menuBar.getObserverDistance();
+                Panel.setObserverDistance(distance);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Nieprawidłowa wartość odległości obserwatora. Wprowadź liczbę.", "Błąd Wprowadzania", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        // NOWE LISTENERY DLA OPCJI WIDOKU 3D
+        menuBar.getVisibleOnlyFaceItem().addActionListener(e -> {
+            JCheckBoxMenuItem source = (JCheckBoxMenuItem) e.getSource();
+            Panel.setVisibleOnlyFace(source.isSelected());
+        });
+
+        menuBar.getOrthoProjectionItem().addActionListener(e -> {
+            Panel.setOrthoProjectionSelected(true);
+        });
+
+        menuBar.getPerspectiveProjectionItem().addActionListener(e -> {
+            Panel.setOrthoProjectionSelected(false);
+        });
     }
 
     private void showFileChooserDialog() {

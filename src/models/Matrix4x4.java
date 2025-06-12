@@ -1,16 +1,10 @@
 package models;
 
-/**
- * Reprezentuje macierz 4x4 do transformacji homogenicznych w przestrzeni 3D.
- */
+
 public class Matrix4x4 {
     private final double[][] data;
 
-    /**
-     * Tworzy macierz 4x4 i inicjalizuje ją podanymi danymi.
-     * @param data Tablica 4x4 z danymi macierzy.
-     * @throws IllegalArgumentException Jeśli podana tablica nie jest macierzą 4x4.
-     */
+
     public Matrix4x4(double[][] data) {
         if (data.length != 4 || data[0].length != 4) {
             throw new IllegalArgumentException("Matrix must be 4x4.");
@@ -163,6 +157,14 @@ public class Matrix4x4 {
         });
     }
 
+    /**
+     * Tworzy macierz projekcji perspektywicznej.
+     * @param fovY Kąt widzenia w pionie w stopniach.
+     * @param aspectRatio Stosunek szerokości do wysokości widocznego obszaru.
+     * @param near Odległość do płaszczyzny bliskiego obcinania.
+     * @param far Odległość do płaszczyzny dalekiego obcinania.
+     * @return Macierz projekcji perspektywicznej.
+     */
     public static Matrix4x4 perspective(double fovY, double aspectRatio, double near, double far ) {
         double fovRad = Math.toRadians(fovY);
         double tanHalfFov = Math.tan(fovRad/2.0);
@@ -172,38 +174,75 @@ public class Matrix4x4 {
         data[1][1] = 1.0 / tanHalfFov;
         data[2][2] = -(far + near)/(far-near);
         data[2][3] = -(2.0 * far * near)/(far-near);
-        data[3][2] = -10.;
+        data[3][2] = -1.0;
         data[3][3] = 0.0;
 
         return new Matrix4x4(data);
     }
 
-    public static Matrix4x4 lookAt(Point3D eye, Point3D center, Point3D up){
-        Point3D f = Point3D.normalize(Point3D.subtract(center, eye));
+    /**
+     * Tworzy macierz projekcji ortograficznej.
+     * @param left Minimalna współrzędna X widocznego obszaru.
+     * @param right Maksymalna współrzędna X widocznego obszaru.
+     * @param bottom Minimalna współrzędna Y widocznego obszaru.
+     * @param top Maksymalna współrzędna Y widocznego obszaru.
+     * @param near Minimalna współrzędna Z widocznego obszaru.
+     * @param far Maksymalna współrzędna Z widocznego obszaru.
+     * @return Macierz projekcji ortograficznej.
+     */
+    public static Matrix4x4 orthographic(double left, double right, double bottom, double top, double near, double far) {
+        double[][] data = new double[4][4];
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                data[i][j] = 0.0;
+            }
+        }
 
-        Point3D s = Point3D.normalize(Point3D.crossProduct(f,up));
+        data[0][0] = 2.0 / (right - left);
+        data[1][1] = 2.0 / (top - bottom);
+        data[2][2] = -2.0 / (far - near);
+        data[0][3] = -(right + left) / (right - left);
+        data[1][3] = -(top + bottom) / (top - bottom);
+        data[2][3] = -(far + near) / (far - near);
+        data[3][3] = 1.0;
 
-        Point3D u = Point3D.crossProduct(s,f);
-
-        double[][] data = {
-                {s.x,u.x,-f.x,0.0},
-                {s.y,u.y,-f.y,0.0},
-                {s.z,u.z,-f.z,0.0},
-                {0.0,0.0,0.0,1.0}
-        };
-
-        Matrix4x4 rotation = new Matrix4x4(data);
-        Matrix4x4 translation = Matrix4x4.translation(-eye.x, -eye.y, -eye.z);
-
-        double[][] lookAtData = {
-                {s.x,s.y,s.z,-Point3D.dotProduct(s,eye)},
-                {u.x,u.y,u.z,-Point3D.dotProduct(u,eye)},
-                {-f.x,-f.y,-f.z,Point3D.dotProduct(f,eye)},
-                {0.0,0.0,0.0,1.0}
-        };
-
-        return new Matrix4x4(lookAtData);
+        return new Matrix4x4(data);
     }
+
+
+    /**
+     * Tworzy macierz widoku (LookAt), która ustawia kamerę.
+     * @param eye Pozycja kamery w przestrzeni świata.
+     * @param center Punkt, na który patrzy kamera.
+     * @param up Wektor "góry" dla kamery.
+     * @return Macierz widoku.
+     */
+    public static Matrix4x4 lookAt(Point3D eye, Point3D center, Point3D up){
+        Point3D f = Point3D.normalize(Point3D.subtract(center, eye)); // Forward vector
+        Point3D s = Point3D.normalize(Point3D.crossProduct(f,up));    // Side vector
+        Point3D u = Point3D.crossProduct(s,f);                        // Up vector (re-orthogonalized)
+
+        // Macierz orientacji (rotation part of view matrix)
+        double[][] R = {
+                {s.x, s.y, s.z, 0},
+                {u.x, u.y, u.z, 0},
+                {-f.x, -f.y, -f.z, 0}, // Z-axis for view space is usually -f
+                {0, 0, 0, 1}
+        };
+
+        // Macierz translacji (translation part of view matrix)
+        double[][] T = {
+                {1, 0, 0, -eye.x},
+                {0, 1, 0, -eye.y},
+                {0, 0, 1, -eye.z},
+                {0, 0, 0, 1}
+        };
+
+        // Macierz widoku = Translacja * Orientacja (lub Rotacja * Translacja w zależności od konwencji)
+        // W tym przypadku jest to odwrotność transformacji kamery, więc (R * T)
+        return Matrix4x4.multiply(new Matrix4x4(R), new Matrix4x4(T));
+    }
+
 
     /**
      * Zwraca dane macierzy.
