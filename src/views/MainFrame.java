@@ -14,101 +14,92 @@ import java.io.File;
 
 public class MainFrame extends JFrame {
 
-    // Domyślne wymiary okna aplikacji
-    private final static Integer DEFAULT_WIDTH = 800;
-    private final static Integer DEFAULT_HEIGHT = 600;
+    private final static Integer DEFAULT_WIDTH = 1200;
+    private final static Integer DEFAULT_HEIGHT = 800;
 
-    // Panele do wyświetlania obrazów/modeli
     private final ImagePanel Panel;
-
-    // Pasek menu aplikacji
     private final MenuBar menuBar;
 
-    // Kontrolery obsługujące obrazy oraz pliki
     private final ImageController imageController;
     private final FileController fileController;
 
     private final TransformationModel transformationModel;
-    private final TransformationPanel transformationPanel;
+
+    private final PointListPanel pointListPanel;
+    private final MatrixDisplayPanel matrixDisplayPanel;
+    private final OperationPanel operationPanel;
 
     public MainFrame() {
-        super("Grafika komputerowa - 3D"); // Zmieniono tytuł
+        super("Grafika komputerowa - 3D");
         setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
         setLayout(new BorderLayout());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Inicjalizacja komponentów
-        transformationModel = new TransformationModel(); // TransformationModel musi być zainicjalizowany PRZED ImagePanel
-        Panel = new ImagePanel("Scena 3D", transformationModel); // Zmieniono: przekazujemy transformationModel
-        menuBar = new MenuBar();
-        transformationPanel = new TransformationPanel(); // Inicjalizacja transformationPanel
+        transformationModel = new TransformationModel();
 
-        // Inicjalizacja kontrolerów
+        Panel = new ImagePanel("Scena 3D", transformationModel);
+        menuBar = new MenuBar();
+
+        pointListPanel = new PointListPanel();
+        matrixDisplayPanel = new MatrixDisplayPanel();
+        operationPanel = new OperationPanel();
+
         imageController = new ImageController(this, transformationModel);
         fileController = new FileController(this);
+        TransformationController transformationController = new TransformationController(
+                operationPanel, pointListPanel, matrixDisplayPanel, Panel, transformationModel, menuBar
+        );
 
+        // --- Układ paneli w MainFrame ---
+        add(Panel, BorderLayout.CENTER);
 
-        // Utworzenie kontenera do organizacji komponentów interfejsu użytkownika
-        // Tutaj można by rozważyć np. podział na 3 panele (lewy, środkowy, prawy) zamiast tylko 2
-        // Na razie pozostawiamy prostą strukturę, gdzie ImagePanel jest centralny, a TransformationPanel na dole.
-        JPanel contentPanel = new JPanel(new GridLayout(1, 1, 5, 5)); // Zmieniono na 1,1 jeśli ImagePanel jest jedyny w centralnej części
-        contentPanel.add(Panel);
-        add(contentPanel, BorderLayout.CENTER); // ImagePanel zajmuje centralną część
+        // Panel prawy (tylko lista punktów)
+        add(pointListPanel, BorderLayout.EAST);
 
-        // Panel transformacji
-        // To jest główny panel operacji i punktów
-        TransformationController transformationController = new TransformationController(transformationPanel, Panel, transformationModel, menuBar);
-        add(transformationPanel, BorderLayout.SOUTH); // Panel transformacji na dole okna
+        // Panel dolny (Operacje i Macierz obok siebie)
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.X_AXIS)); // Rozkłada komponenty poziomo
 
-        // Pasek menu
-        setJMenuBar(menuBar); // Dodanie menu do okna
-        setMenuBarListeners(); // Ustawienie nasłuchu na zdarzenia wywołania opcji z menubar
+        // Upewnij się, że OperationPanel i MatrixDisplayPanel mają ustawione preferowane/maksymalne rozmiary
+        bottomPanel.add(operationPanel);
+        bottomPanel.add(Box.createHorizontalStrut(10)); // Mała przerwa
+        bottomPanel.add(matrixDisplayPanel);
 
-        setLocationRelativeTo(null); // Centrowanie okna na ekranie
-        setVisible(true); // Ustawienie widoczności okna
+        add(bottomPanel, BorderLayout.SOUTH);
+
+        setJMenuBar(menuBar);
+        setMenuBarListeners();
+
+        setLocationRelativeTo(null);
+        setVisible(true);
     }
 
     public ImagePanel getPanel() {
         return Panel;
     }
 
-    /**
-     * **Nowa metoda**: Zwraca instancję TransformationPanel.
-     * Jest potrzebna, aby ImageController mógł odświeżyć listę punktów
-     * po załadowaniu modelu 3D z pliku.
-     */
-    public TransformationPanel getTransformationPanel() {
-        return transformationPanel;
+    public PointListPanel getPointListPanel() {
+        return pointListPanel;
     }
 
-    /**
-     * Dostosowuje rozmiar okna do załadowanego obrazu z lewego panelu.
-     * Na tym etapie funkcjonalność dostosowywania do obrazu nie będzie używana
-     * dla obiektów 3D, ale metoda zostaje zachowana.
-     *
-     * @see javax.swing.JFrame#setSize(int, int)
-     * @see javax.swing.JFrame#setLocationRelativeTo(java.awt.Component)
-     */
+    public MatrixDisplayPanel getMatrixDisplayPanel() {
+        return matrixDisplayPanel;
+    }
+
+
     public void adjustWindowSize() {
-        // Ten kod był do dostosowywania okna do obrazu 2D.
-        // Dla 3D obiektów nie będziemy go używać w ten sam sposób,
-        // ale pozostawiamy metodę.
         var image = Panel.getModel();
         if (image == null || image.getImage() == null) {
             return;
         }
-
-        int newWidth = Math.max(getWidth(), image.getImage().getWidth() + 100); // Dostosowano, jeśli panel jest jeden
-        int newHeight = Math.max(getHeight(), image.getImage().getHeight() + 100);
-        setSize(newWidth, newHeight);
-        setLocationRelativeTo(null);
+        // Ta metoda jest raczej dla 2D; dla 3D chcemy stałe, duże okno
+        // Jeśli chcesz, aby okno było zawsze dostosowane, to możesz ją zresetować
+        // int newWidth = Math.max(getWidth(), image.getImage().getWidth() + 100);
+        // int newHeight = Math.max(getHeight(), image.getImage().getHeight() + 100);
+        // setSize(newWidth, newHeight);
+        // setLocationRelativeTo(null);
     }
 
-    /**
-     * @see java.awt.event.ActionListener
-     * @see java.awt.event.ActionListener#actionPerformed(ActionEvent)
-     * @see javax.swing.AbstractButton#addActionListener(ActionListener)
-     */
     private void setMenuBarListeners() {
         menuBar.getOpenFileMenuItem().addActionListener(_ -> showFileChooserDialog());
         menuBar.getSaveFileMenuItem().addActionListener(_ -> showSaveFileDialog());
@@ -116,18 +107,9 @@ public class MainFrame extends JFrame {
         menuBar.getClearLeftPanelMenuItem().addActionListener(_ -> imageController.clearLeftPanel());
     }
 
-
-    /**
-     * Metoda otwiera okno dialogowe wyboru pliku graficznego.
-     * Nadal wczytuje obrazy 2D, ale teraz również pliki OBJ.
-     *
-     * @see JFileChooser
-     * @see ImageController#loadImage(File)
-     */
     private void showFileChooserDialog() {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Wybierz plik graficzny lub model 3D (.obj)"); // Zmieniono tekst
-        // Dodaj filtr dla plików OBJ, jeśli chcesz
+        fileChooser.setDialogTitle("Wybierz plik graficzny lub model 3D (.obj)");
         fileChooser.setFileFilter(new FileNameExtensionFilter("Obrazy (BMP, PNG) i Modele 3D (OBJ)", "bmp", "png", "obj"));
         int returnValue = fileChooser.showOpenDialog(this);
 
@@ -137,16 +119,9 @@ public class MainFrame extends JFrame {
         }
     }
 
-    /**
-     * Metoda otwiera okno dialogowe zapisu pliku graficznego.
-     * Nadal dotyczy zapisu obrazu 2D.
-     *
-     * @see JFileChooser
-     * @see FileController#saveFile(File)
-     */
     private void showSaveFileDialog() {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Zapisz obraz (na razie tylko 2D)"); // Zmieniono tekst
+        fileChooser.setDialogTitle("Zapisz obraz (na razie tylko 2D)");
         fileChooser.setFileFilter(new FileNameExtensionFilter("BMP & PNG Images", "bmp", "png"));
         int returnValue = fileChooser.showSaveDialog(this);
 

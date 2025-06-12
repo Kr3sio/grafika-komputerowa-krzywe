@@ -4,7 +4,9 @@ import models.Matrix4x4;
 import models.Point3D;
 import models.TransformationModel;
 import views.ImagePanel;
-import views.TransformationPanel;
+import views.PointListPanel;
+import views.MatrixDisplayPanel;
+import views.OperationPanel;
 import views.MenuBar;
 
 import javax.swing.*;
@@ -16,14 +18,20 @@ import java.util.List;
 public class TransformationController {
 
     private final TransformationModel model;
-    private final TransformationPanel transformationPanel;
+    private final OperationPanel operationPanel;
+    private final PointListPanel pointListPanel;
+    private final MatrixDisplayPanel matrixDisplayPanel;
     private final ImagePanel imagePanel;
     private final MenuBar menuBar;
 
-    public TransformationController(TransformationPanel transformationPanel, ImagePanel imagePanel, TransformationModel model, MenuBar menuBar) {
+    public TransformationController(OperationPanel operationPanel, PointListPanel pointListPanel,
+                                    MatrixDisplayPanel matrixDisplayPanel, ImagePanel imagePanel,
+                                    TransformationModel model, MenuBar menuBar) {
         this.model = model;
         this.menuBar = menuBar;
-        this.transformationPanel = transformationPanel;
+        this.operationPanel = operationPanel;
+        this.pointListPanel = pointListPanel;
+        this.matrixDisplayPanel = matrixDisplayPanel;
         this.imagePanel = imagePanel;
         setupListeners();
     }
@@ -35,16 +43,15 @@ public class TransformationController {
             public void mouseClicked(MouseEvent e) {
                 Point3D p = imagePanel.panelToCentered3D(e.getX(), e.getY());
                 model.addPoint(p.getX(), p.getY(), p.getZ());
-                transformationPanel.refreshPointsList(model.getPoints());
+                pointListPanel.refreshPointsList(model.getPoints());
                 imagePanel.repaint();
             }
         });
 
-        // --- Zmienione listenery dla obrotu ---
-        transformationPanel.getRotateXButton().addActionListener(e -> {
+        operationPanel.getRotateXButton().addActionListener(e -> {
             try {
-                double angle = Double.parseDouble(transformationPanel.getRotateXValue());
-                Matrix4x4 rotationMatrix = Matrix4x4.rotationX(angle); // Obrót wokół X
+                double angle = Double.parseDouble(operationPanel.getRotateXValue());
+                Matrix4x4 rotationMatrix = Matrix4x4.rotationX(angle);
                 model.applyTransformation(rotationMatrix);
                 updateDisplay();
             } catch (NumberFormatException ex) {
@@ -52,10 +59,10 @@ public class TransformationController {
             }
         });
 
-        transformationPanel.getRotateYButton().addActionListener(e -> {
+        operationPanel.getRotateYButton().addActionListener(e -> {
             try {
-                double angle = Double.parseDouble(transformationPanel.getRotateYValue());
-                Matrix4x4 rotationMatrix = Matrix4x4.rotationY(angle); // Obrót wokół Y
+                double angle = Double.parseDouble(operationPanel.getRotateYValue());
+                Matrix4x4 rotationMatrix = Matrix4x4.rotationY(angle);
                 model.applyTransformation(rotationMatrix);
                 updateDisplay();
             } catch (NumberFormatException ex) {
@@ -63,24 +70,22 @@ public class TransformationController {
             }
         });
 
-        transformationPanel.getRotateZButton().addActionListener(e -> {
+        operationPanel.getRotateZButton().addActionListener(e -> {
             try {
-                double angle = Double.parseDouble(transformationPanel.getRotateZValue());
-                Matrix4x4 rotationMatrix = Matrix4x4.rotationZ(angle); // Obrót wokół Z
+                double angle = Double.parseDouble(operationPanel.getRotateZValue());
+                Matrix4x4 rotationMatrix = Matrix4x4.rotationZ(angle);
                 model.applyTransformation(rotationMatrix);
                 updateDisplay();
             } catch (NumberFormatException ex) {
                 showError("Nieprawidłowy kąt obrotu dla osi Z.");
             }
         });
-        // --- Koniec zmienionych listenerów dla obrotu ---
 
-
-        transformationPanel.getScaleButton().addActionListener(e -> {
+        operationPanel.getScaleButton().addActionListener(e -> {
             try {
-                double sx = Double.parseDouble(transformationPanel.getScaleXValue());
-                double sy = Double.parseDouble(transformationPanel.getScaleYValue());
-                double sz = Double.parseDouble(transformationPanel.getScaleZValue()); // NOWE: Używamy sz
+                double sx = Double.parseDouble(operationPanel.getScaleXValue());
+                double sy = Double.parseDouble(operationPanel.getScaleYValue());
+                double sz = Double.parseDouble(operationPanel.getScaleZValue());
 
                 Matrix4x4 scaleMatrix = Matrix4x4.scaling(sx, sy, sz);
 
@@ -91,11 +96,11 @@ public class TransformationController {
             }
         });
 
-        transformationPanel.getTranslateButton().addActionListener(e -> {
+        operationPanel.getTranslateButton().addActionListener(e -> {
             try {
-                double dx = Double.parseDouble(transformationPanel.getTranslateXValue());
-                double dy = Double.parseDouble(transformationPanel.getTranslateYValue());
-                double dz = Double.parseDouble(transformationPanel.getTranslateZValue()); // NOWE: Używamy dz
+                double dx = Double.parseDouble(operationPanel.getTranslateXValue());
+                double dy = Double.parseDouble(operationPanel.getTranslateYValue());
+                double dz = Double.parseDouble(operationPanel.getTranslateZValue());
 
                 Matrix4x4 translateMatrix = Matrix4x4.translation(dx, dy, dz);
 
@@ -106,8 +111,22 @@ public class TransformationController {
             }
         });
 
-        transformationPanel.getRemovePointButton().addActionListener(e -> {
-            int[] selected = transformationPanel.getSelectedPointIndices();
+        // NOWY LISTENER: Zmiana odległości
+        operationPanel.getChangeDistanceButton().addActionListener(e -> {
+            try {
+                double dz = Double.parseDouble(operationPanel.getDistanceValue());
+                // Zmiana odległości to po prostu translacja w osi Z
+                Matrix4x4 distanceTranslateMatrix = Matrix4x4.translation(0, 0, dz);
+                model.applyTransformation(distanceTranslateMatrix);
+                updateDisplay();
+            } catch (NumberFormatException ex) {
+                showError("Nieprawidłowa wartość odległości.");
+            }
+        });
+
+
+        pointListPanel.getRemovePointButton().addActionListener(e -> {
+            int[] selected = pointListPanel.getSelectedPointIndices();
             if (selected.length == 0) {
                 showError("Wybierz punkt do usunięcia.");
                 return;
@@ -121,12 +140,12 @@ public class TransformationController {
     }
 
     private void updateDisplay() {
-        transformationPanel.updateMatrixDisplay(model.getMatrixString());
-        transformationPanel.refreshPointsList(model.getPoints());
+        matrixDisplayPanel.updateMatrixDisplay(model.getMatrixString());
+        pointListPanel.refreshPointsList(model.getPoints());
         imagePanel.repaint();
     }
 
     private void showError(String message) {
-        JOptionPane.showMessageDialog(transformationPanel, message, "Błąd", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(null, message, "Błąd", JOptionPane.ERROR_MESSAGE);
     }
 }

@@ -5,6 +5,7 @@ import models.MeshModel;
 import models.Point3D;
 import models.TransformationModel;
 import models.Matrix4x4;
+import models.Face;
 
 import javax.swing.*;
 import java.awt.*;
@@ -100,9 +101,9 @@ public class ImagePanel extends JPanel {
 
                 double aspectRatio = (double) getWidth() / getHeight();
                 Matrix4x4 projectionMatrix = Matrix4x4.perspective(fovY, aspectRatio, near, far);
-                Matrix4x4 viewMatrix = Matrix4x4.lookAt(eye,center,up);
+                Matrix4x4 viewMatrix = Matrix4x4.lookAt(eye, center, up);
 
-                for (models.Face face : meshModel.getFaces()) {
+                for (Face face : meshModel.getFaces()) { // TERAZ UŻYWA models.Face
                     List<Integer> indices = face.getVertexIndices();
                     for (int i = 0; i < indices.size(); i++) {
                         int idx1 = indices.get(i);

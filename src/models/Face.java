@@ -1,13 +1,19 @@
+// models/Face.java
 package models;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * Klasa reprezentująca ścianę (Face) modelu 3D.
+ * Przechowuje indeksy wierzchołków tworzących tę ścianę.
+ */
 public class Face {
-    private final List<Integer> vertexIndices;
+    private List<Integer> vertexIndices;
 
     public Face(List<Integer> vertexIndices) {
-        this.vertexIndices = new ArrayList<>(vertexIndices); // Kopiujemy listę
+        // Tworzymy nową listę, aby nie modyfikować oryginalnej
+        this.vertexIndices = new ArrayList<>(vertexIndices);
     }
 
     public List<Integer> getVertexIndices() {
