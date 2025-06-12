@@ -178,6 +178,33 @@ public class Matrix4x4 {
         return new Matrix4x4(data);
     }
 
+    public static Matrix4x4 lookAt(Point3D eye, Point3D center, Point3D up){
+        Point3D f = Point3D.normalize(Point3D.subtract(center, eye));
+
+        Point3D s = Point3D.normalize(Point3D.crossProduct(f,up));
+
+        Point3D u = Point3D.crossProduct(s,f);
+
+        double[][] data = {
+                {s.x,u.x,-f.x,0.0},
+                {s.y,u.y,-f.y,0.0},
+                {s.z,u.z,-f.z,0.0},
+                {0.0,0.0,0.0,1.0}
+        };
+
+        Matrix4x4 rotation = new Matrix4x4(data);
+        Matrix4x4 translation = Matrix4x4.translation(-eye.x, -eye.y, -eye.z);
+
+        double[][] lookAtData = {
+                {s.x,s.y,s.z,-Point3D.dotProduct(s,eye)},
+                {u.x,u.y,u.z,-Point3D.dotProduct(u,eye)},
+                {-f.x,-f.y,-f.z,Point3D.dotProduct(f,eye)},
+                {0.0,0.0,0.0,1.0}
+        };
+
+        return new Matrix4x4(lookAtData);
+    }
+
     /**
      * Zwraca dane macierzy.
      * @return Tablica 4x4 z danymi macierzy.

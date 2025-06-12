@@ -28,6 +28,10 @@ public class ImagePanel extends JPanel {
     private double near = 0.1;
     private double far = 100.0; // Zmniejszyłem far dla lepszej kontroli na początku
 
+    private Point3D eye = new Point3D(0,0,-10);
+    private  Point3D center = new Point3D(0,0,0);
+    private Point3D up = new Point3D(0,1,0);
+
     public ImagePanel(String title, TransformationModel transformationModel) {
         setBorder(BorderFactory.createTitledBorder(title));
         setBackground(Color.LIGHT_GRAY);
@@ -36,6 +40,8 @@ public class ImagePanel extends JPanel {
         this.transformationModel = transformationModel;
         // Inicjalizacja buforów w invalidate() i initBuffers()
     }
+
+
 
     private void initBuffers() {
         int width = getWidth();
@@ -94,6 +100,7 @@ public class ImagePanel extends JPanel {
 
                 double aspectRatio = (double) getWidth() / getHeight();
                 Matrix4x4 projectionMatrix = Matrix4x4.perspective(fovY, aspectRatio, near, far);
+                Matrix4x4 viewMatrix = Matrix4x4.lookAt(eye,center,up);
 
                 for (models.Face face : meshModel.getFaces()) {
                     List<Integer> indices = face.getVertexIndices();
@@ -105,8 +112,11 @@ public class ImagePanel extends JPanel {
                             Point3D p1_3d_world = transformedMeshVertices.get(idx1);
                             Point3D p2_3d_world = transformedMeshVertices.get(idx2);
 
-                            Point3D p1_projected = Matrix4x4.transformPoint(projectionMatrix, p1_3d_world);
-                            Point3D p2_projected = Matrix4x4.transformPoint(projectionMatrix, p2_3d_world);
+                            Point3D p1_3d_view = Matrix4x4.transformPoint(viewMatrix,p1_3d_world);
+                            Point3D p2_3d_view = Matrix4x4.transformPoint(viewMatrix,p2_3d_world);
+
+                            Point3D p1_projected = Matrix4x4.transformPoint(projectionMatrix, p1_3d_view);
+                            Point3D p2_projected = Matrix4x4.transformPoint(projectionMatrix, p2_3d_view);
 
                             if (p1_projected.z >= -1.0 && p1_projected.z <= 1.0 &&
                                     p2_projected.z >= -1.0 && p2_projected.z <= 1.0) {
